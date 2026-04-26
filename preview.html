@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECOShoham – תצוגה מקדימה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #1a5276;
+    --secondary: #2ecc71;
+    --accent: #e67e22;
+    --bg: #f8f9fa;
+    --text: #1a1a2e;
+    --muted: #6c757d;
+  }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+
+  /* NAVBAR */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: white; box-shadow: 0 2px 12px rgba(26,82,118,0.1);
+    padding: 0 2rem; height: 70px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 38px; height: 38px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 13px; }
+  .logo-text { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -1px; }
+  .logo-text span { color: var(--secondary); }
+  .nav-links { display: flex; gap: 1.8rem; align-items: center; }
+  .nav-links a { text-decoration: none; color: #444; font-weight: 600; font-size: 1rem; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--primary); }
+  .nav-cta { background: var(--accent); color: white; padding: 0.5rem 1.4rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(230,126,34,0.3); transition: transform 0.2s; }
+  .nav-cta:hover { transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: calc(100vh - 70px);
+    background: #d0d0d0;
+    background-image: linear-gradient(335deg,#b8b8b8 23px,transparent 23px),linear-gradient(155deg,#b8b8b8 23px,transparent 23px),linear-gradient(335deg,#b8b8b8 23px,transparent 23px),linear-gradient(155deg,#b8b8b8 23px,transparent 23px);
+    background-size: 58px 30px;
+    background-position: 0 2px,4px 35px,29px 17px,34px 0;
+    position: relative; display: flex; align-items: center;
+  }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(225deg, rgba(26,82,118,0.70) 0%, rgba(26,82,118,0.50) 50%, rgba(248,249,250,0.85) 100%);
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; display: flex; align-items: center; gap: 3rem; width: 100%; }
+  .hero-text { flex: 1; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.92); color: var(--primary); padding: 0.4rem 1.1rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  .hero-badge::before { content: "✨"; }
+  h1 { font-size: clamp(2.2rem, 4vw, 3.8rem); font-weight: 900; color: white; line-height: 1.15; margin-bottom: 1.2rem; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+  h1 .accent-text { background: linear-gradient(to left, var(--secondary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-desc { font-size: 1.1rem; color: rgba(255,255,255,0.9); line-height: 1.7; margin-bottom: 2rem; max-width: 520px; text-shadow: 0 1px 6px rgba(0,0,0,0.2); }
+  .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: white; padding: 0.75rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.05rem; border: none; cursor: pointer; box-shadow: 0 4px 18px rgba(230,126,34,0.35); transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(230,126,34,0.45); }
+  .btn-outline { background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.05rem; border: 2px solid white; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-outline:hover { background: rgba(255,255,255,0.35); }
+  .hero-stats { display: flex; gap: 2.5rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2); }
+  .stat-number { font-size: 2rem; font-weight: 900; color: white; display: block; }
+  .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500; }
+  .hero-image { flex: 0 0 420px; }
+  .hero-image img { width: 100%; border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+
+  /* TICKER */
+  .ticker { background: var(--primary); color: white; padding: 0.65rem 0; overflow: hidden; }
+  .ticker-inner { display: flex; gap: 3rem; white-space: nowrap; animation: scroll 22s linear infinite; font-size: 0.9rem; font-weight: 600; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker-item::before { content: "🔬 "; }
+
+  /* SECTIONS */
+  section { padding: 5rem 2rem; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .section-badge { display: inline-block; background: rgba(46,204,113,0.12); color: var(--secondary); padding: 0.3rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; }
+  .section-title { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 900; color: var(--primary); margin-bottom: 1rem; text-align: center; line-height: 1.2; }
+  .section-title .accent-text { background: linear-gradient(to left, var(--secondary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .section-subtitle { color: var(--muted); font-size: 1.05rem; text-align: center; max-width: 600px; margin: 0 auto 3rem; line-height: 1.7; }
+
+  /* PROBLEM/SOLUTION */
+  .problem-solution { background: white; }
+  .ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+  .ps-card { background: linear-gradient(135deg, #fff5f0 0%, #fff 100%); border: 1px solid rgba(230,126,34,0.15); border-radius: 20px; padding: 2.5rem; }
+  .ps-card.solution { background: linear-gradient(135deg, #f0fff8 0%, #fff 100%); border-color: rgba(46,204,113,0.15); }
+  .ps-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .ps-card h3 { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 0.8rem; }
+  .ps-card p { color: var(--muted); line-height: 1.7; font-size: 1rem; }
+  .ps-list { list-style: none; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .ps-list li { display: flex; align-items: flex-start; gap: 10px; color: #444; font-size: 0.95rem; line-height: 1.5; }
+  .ps-list li::before { content: "✓"; color: var(--secondary); font-weight: 900; flex-shrink: 0; }
+
+  /* PRODUCTS */
+  .products-section {
+    position: relative;
+    background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)), url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%231a5276" fill-opacity="0.04"><circle cx="30" cy="30" r="20"/></g></g></svg>');
+  }
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; }
+  .product-card {
+    background: white; border-radius: 24px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.06);
+    transition: all 0.35s; display: flex; flex-direction: column;
+  }
+  .product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); border-color: rgba(46,204,113,0.3); }
+  .product-img { position: relative; aspect-ratio: 4/3; overflow: hidden; background: #f8f9fa; }
+  .product-img img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.5s; }
+  .product-card:hover .product-img img { transform: scale(1.05); }
+  .product-badge { position: absolute; top: 12px; right: 12px; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; color: white; }
+  .badge-accent { background: var(--accent); }
+  .badge-green { background: var(--secondary); }
+  .badge-primary { background: var(--primary); }
+  .badge-blue { background: #2980b9; }
+  .badge-red { background: #c0392b; }
+  .badge-coming { background: #f39c12; position: absolute; top: 12px; left: 12px; }
+  .product-img-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(to top, white, transparent); }
+  .product-body { padding: 1.2rem 1.4rem 1.4rem; flex: 1; display: flex; flex-direction: column; }
+  .product-level { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.6rem; }
+  .product-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; line-height: 1.3; }
+  .product-desc { color: var(--muted); font-size: 0.85rem; line-height: 1.6; flex: 1; margin-bottom: 1rem; }
+  .stars { display: flex; gap: 2px; color: var(--accent); font-size: 0.85rem; margin-bottom: 1rem; }
+  .product-btn { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; width: 100%; font-family: inherit; transition: background 0.2s; }
+  .product-btn:hover { background: #154360; }
+  .product-btn.accent { background: var(--accent); }
+  .product-btn.accent:hover { background: #d35400; }
+
+  /* ABOUT */
+  .about-section { background: linear-gradient(135deg, #eaf4fc 0%, #fdfefe 100%); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+  .about-text h2 { font-size: 2.2rem; font-weight: 900; color: var(--primary); margin-bottom: 1.5rem; }
+  .about-text p { color: #555; line-height: 1.8; font-size: 1rem; margin-bottom: 1rem; }
+  .about-features { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  .about-feature { background: white; border-radius: 14px; padding: 1rem 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  .about-feature-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+  .about-feature h4 { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.3rem; }
+  .about-feature p { font-size: 0.82rem; color: var(--muted); margin: 0; }
+  .about-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .about-photo { border-radius: 16px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+  .about-photo img { width: 100%; height: 160px; object-fit: cover; }
+
+  /* TESTIMONIALS */
+  .testimonials { background: white; }
+  .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .testimonial-card { background: #f8fafc; border-radius: 18px; padding: 1.5rem; border: 1px solid #e9ecef; }
+  .testimonial-stars { color: var(--accent); font-size: 1rem; margin-bottom: 0.8rem; }
+  .testimonial-text { color: #444; font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.2rem; font-style: italic; }
+  .testimonial-author { display: flex; align-items: center; gap: 10px; }
+  .author-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+  .author-name { font-weight: 700; color: var(--primary); font-size: 0.9rem; }
+  .author-role { color: var(--muted); font-size: 0.78rem; }
+
+  /* FAQ */
+  .faq-section { background: #f8f9fa; }
+  .faq-list { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+  .faq-item { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+  .faq-q { padding: 1.1rem 1.5rem; font-weight: 700; color: var(--primary); font-size: 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .faq-a { padding: 0 1.5rem 1.1rem; color: #555; font-size: 0.95rem; line-height: 1.7; }
+
+  /* CONTACT */
+  .contact-section { background: var(--primary); color: white; text-align: center; }
+  .contact-section h2 { font-size: 2.2rem; font-weight: 900; margin-bottom: 1rem; }
+  .contact-section p { font-size: 1.05rem; opacity: 0.85; max-width: 500px; margin: 0 auto 2rem; line-height: 1.7; }
+  .contact-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .whatsapp-btn { background: #25D366; color: white; padding: 0.85rem 2.2rem; border-radius: 50px; font-weight: 700; font-size: 1.05rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37,211,102,0.3); transition: transform 0.2s; }
+  .whatsapp-btn:hover { transform: translateY(-2px); }
+  .contact-form-btn { background: white; color: var(--primary); padding: 0.85rem 2.2rem; border-radius: 50px; font-weight: 700; font-size: 1.05rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+  .contact-form-btn:hover { transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer { background: #0d2c45; color: rgba(255,255,255,0.7); text-align: center; padding: 2rem; font-size: 0.9rem; }
+  footer a { color: var(--secondary); text-decoration: none; }
+
+  /* WHATSAPP FLOAT */
+  .wa-float { position: fixed; bottom: 24px; left: 24px; z-index: 999; background: #25D366; color: white; padding: 0.65rem 1.2rem; border-radius: 50px; font-weight: 700; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: transform 0.2s; }
+  .wa-float:hover { transform: translateY(-2px); }
+
+  @media (max-width: 900px) {
+    .hero-content { flex-direction: column; }
+    .hero-image { display: none; }
+    .ps-grid, .about-grid, .testimonials-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">3D</div>
+    <span class="logo-text">ECO<span>Shoham</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="#">דף הבית</a>
+    <a href="#">אודות</a>
+    <a href="#">חדשנות פדגוגית</a>
+    <a href="#">מגזין</a>
+    <a href="#">קהילת מורים</a>
+    <a href="#">צור קשר</a>
+    <a href="#products" class="nav-cta">גלו את הערכות ←</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">ערכות למידה תלת-מימדיות לבתי ספר</div>
+      <h1>
+        מדע בידיים<br>
+        <span class="accent-text">חוויה בלתי נשכחת</span>
+      </h1>
+      <p class="hero-desc">ערכות STEM תלת-מימדיות אינטראקטיביות שהופכות מושגים מופשטים לחוויה מוחשית ומרתקת בכיתה</p>
+      <div class="hero-buttons">
+        <a href="#products" class="btn-primary">גלו את הערכות ←</a>
+        <a href="#about" class="btn-outline">▶ קראו עלינו</a>
+      </div>
+      <div class="hero-stats">
+        <div><span class="stat-number">+150</span><span class="stat-label">בתי ספר</span></div>
+        <div><span class="stat-number">+5,000</span><span class="stat-label">תלמידים</span></div>
+        <div><span class="stat-number">98%</span><span class="stat-label">שביעות רצון</span></div>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="Gemini_Generated_Image_6ipmgv6ipmgv6ipm.jpeg" alt="ECOShoham kit" onerror="this.style.display='none'">
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">ערכות בדוקות מחקרית לשיפור הישגים</span>
+    <span class="ticker-item">תוצאות מוכחות בכיתות ברחבי הארץ</span>
+    <span class="ticker-item">מותאם לתכנית הלימודים הישראלית</span>
+    <span class="ticker-item">למידה מבוססת חקר ופרויקטים</span>
+    <span class="ticker-item">תמיכה מלאה למורים</span>
+    &nbsp;&nbsp;&nbsp;
+    <span class="ticker-item">ערכות בדוקות מחקרית לשיפור הישגים</span>
+    <span class="ticker-item">תוצאות מוכחות בכיתות ברחבי הארץ</span>
+    <span class="ticker-item">מותאם לתכנית הלימודים הישראלית</span>
+    <span class="ticker-item">למידה מבוססת חקר ופרויקטים</span>
+    <span class="ticker-item">תמיכה מלאה למורים</span>
+  </div>
+</div>
+
+<!-- PROBLEM / SOLUTION -->
+<section class="problem-solution">
+  <div class="section-inner">
+    <div style="text-align:center; margin-bottom:3rem;">
+      <span class="section-badge">חדשנות פדגוגית</span>
+      <h2 class="section-title">למה <span class="accent-text">ערכות תלת-מימד?</span></h2>
+      <p class="section-subtitle">הוראה מסורתית אינה מספיקה למושגים מורכבים — הפתרון הוא למידה חווייתית ומוחשית</p>
+    </div>
+    <div class="ps-grid">
+      <div class="ps-card">
+        <div class="ps-icon">😔</div>
+        <h3>האתגר</h3>
+        <p>תלמידים מתקשים להבין מושגי ביולוגיה ומדע מופשטים רק מתוך ספרים ושקפים.</p>
+        <ul class="ps-list">
+          <li>חוסר מוטיבציה ומעורבות בשיעורים</li>
+          <li>קושי בהמחשה ויזואלית של מבנים מולקולריים</li>
+          <li>שיכחה מהירה של חומר הנלמד באופן פסיבי</li>
+        </ul>
+      </div>
+      <div class="ps-card solution">
+        <div class="ps-icon">🚀</div>
+        <h3>הפתרון של ECOShoham</h3>
+        <p>ערכות תלת-מימד אינטראקטיביות שמאפשרות לתלמידים לבנות ולגעת במבנים מדעיים.</p>
+        <ul class="ps-list">
+          <li>למידה מוחשית שמשפרת הבנה ב-40%</li>
+          <li>הגדלת מעורבות ומוטיבציה בכיתה</li>
+          <li>שימור ידע לטווח ארוך</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="section-inner">
+    <div style="text-align:center; margin-bottom:3rem;">
+      <span class="section-badge">🧬 הערכות שלנו</span>
+      <h2 class="section-title">ערכות למידה <span class="accent-text">שמשנות את הכיתה</span></h2>
+      <p class="section-subtitle">כל ערכה מתוכננת בקפידה כדי להפוך מושגים מופשטים לחוויה מוחשית ובלתי נשכחת</p>
+    </div>
+    <div class="products-grid">
+
+      <!-- Product 1 -->
+      <div class="product-card">
+        <div class="product-img">
+          <img src="workshop_IMG_8640.jpg" alt="ערכה לתרגום חלבון" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23eaf4fc%22 width=%22400%22 height=%22300%22/><text x=%22200%22 y=%22150%22 text-anchor=%22middle%22 fill=%22%231a5276%22 font-family=%22sans-serif%22 font-size=%2218%22>ערכה לתרגום חלבון</text></svg>'">
+          <span class="product-badge badge-accent">הכי נמכר</span>
+          <div class="product-img-fade"></div>
+        </div>
+        <div class="product-body">
+          <div class="product-level">🎓 חטיבת ביניים ותיכון</div>
+          <div class="product-title">ערכה לתרגום חלבון</div>
+          <div class="product-desc">חובה בכל בית ספר. מתאים למגמת ביולוגיה, ביוטכנולוגיה וביורפואה.</div>
+          <div class="stars">★★★★★ <span style="color:var(--muted);font-size:0.8rem;margin-right:4px">(4.9)</span></div>
+          <button class="product-btn accent">בקשת הצעת מחיר ←</button>
+        </div>
+      </div>
+
+      <!-- Product 2 -->
+      <div class="product-card">
+        <div class="product-img">
+          <img src="" alt="ערכת סליל DNA" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23f0fff8%22 width=%22400%22 height=%22300%22/><text x=%22200%22 y=%22150%22 text-anchor=%22middle%22 fill=%22%231a5276%22 font-family=%22sans-serif%22 font-size=%2218%22>ערכת סליל DNA</text></svg>'">
+          <span class="product-badge badge-green">חדש</span>
+          <span class="product-badge badge-coming">בפיתוח</span>
+          <div class="product-img-fade"></div>
+        </div>
+        <div class="product-body">
+          <div class="product-level">🎓 חטיבת ביניים ותיכון</div>
+          <div class="product-title">ערכת סליל DNA</div>
+          <div class="product-desc">בנו את הסליל הכפול של ה-DNA בעצמכם! למדו על בסיסי חנקן, קשרים ושכפול.</div>
+          <div class="stars">★★★★★ <span style="color:var(--muted);font-size:0.8rem;margin-right:4px">(4.9)</span></div>
+          <button class="product-btn">בקשת הצעת מחיר ←</button>
+        </div>
+      </div>
+
+      <!-- Product 3 -->
+      <div class="product-card">
+        <div class="product-img">
+          <img src="" alt="ערכת תא חי" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23fef9e7%22 width=%22400%22 height=%22300%22/><text x=%22200%22 y=%22150%22 text-anchor=%22middle%22 fill=%22%231a5276%22 font-family=%22sans-serif%22 font-size=%2218%22>ערכת תא חי</text></svg>'">
+          <span class="product-badge badge-primary">מומלץ למורים</span>
+          <span class="product-badge badge-coming">בפיתוח</span>
+          <div class="product-img-fade"></div>
+        </div>
+        <div class="product-body">
+          <div class="product-level">🎓 יסודי וחטיבת ביניים</div>
+          <div class="product-title">ערכת תא חי</div>
+          <div class="product-desc">הכירו את האברונים של התא: גרעין, מיטוכונדריה, רשת אנדופלזמטית ועוד — הכל בתלת-מימד.</div>
+          <div class="stars">★★★★★ <span style="color:var(--muted);font-size:0.8rem;margin-right:4px">(4.9)</span></div>
+          <button class="product-btn">בקשת הצעת מחיר ←</button>
+        </div>
+      </div>
+
+      <!-- Product 4 - Workshop -->
+      <div class="product-card">
+        <div class="product-img">
+          <img src="workshop_IMG_8642.jpg" alt="סדנאות STEM" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23f4ecf7%22 width=%22400%22 height=%22300%22/><text x=%22200%22 y=%22150%22 text-anchor=%22middle%22 fill=%22%231a5276%22 font-family=%22sans-serif%22 font-size=%2216%22>סדנאות STEM</text></svg>'">
+          <span class="product-badge" style="background:linear-gradient(to left,var(--secondary),var(--accent))">חדש</span>
+          <div class="product-img-fade"></div>
+        </div>
+        <div class="product-body">
+          <div class="product-level">🎓 חטיבת ביניים ותיכון</div>
+          <div class="product-title">סדנאות STEM וביוחקר</div>
+          <div class="product-desc">חוקרים, מתכננים, יוצרים! שילוב AI, מדפסות ועטים תלת-מימדיים בסדנה בלתי נשכחת.</div>
+          <button class="product-btn accent">לפרטים ותיאום סדנה ←</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-section" id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-text">
+        <h2>אנחנו ECOShoham<br><span style="color:var(--secondary)">חדשנות בחינוך STEM</span></h2>
+        <p>ECOShoham הוקמה מתוך תשוקה אמיתית לחינוך מדעי איכותי. אנחנו מאמינים שכל תלמיד יכול להתאהב במדע — כשהוא מוגש בצורה הנכונה.</p>
+        <p>הערכות שלנו פותחו בשיתוף מורים ומדענים, ועברו בדיקות בכיתות רבות בכל הארץ. אנחנו מלווים מורים לאורך כל הדרך.</p>
+        <div class="about-features">
+          <div class="about-feature">
+            <div class="about-feature-icon">🔬</div>
+            <h4>מבוסס מחקר</h4>
+            <p>פותח עם חוקרים ומומחים בחינוך</p>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon">📚</div>
+            <h4>מותאם לתכנית</h4>
+            <p>עולה בקנה אחד עם דרישות משרד החינוך</p>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon">👩‍🏫</div>
+            <h4>ליווי מורים</h4>
+            <p>הדרכה, חומרים ותמיכה מלאה</p>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon">🏆</div>
+            <h4>תוצאות מוכחות</h4>
+            <p>שיפור הישגים ב-150+ בתי ספר</p>
+          </div>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="about-photo"><img src="workshop_IMG_8640.jpg" alt="Workshop" onerror="this.style.background='#eaf4fc'"></div>
+        <div class="about-photo"><img src="workshop_IMG_8641.jpg" alt="Workshop" onerror="this.style.background='#f0fff8'"></div>
+        <div class="about-photo"><img src="workshop_IMG_8642.jpg" alt="Workshop" onerror="this.style.background='#fef9e7'"></div>
+        <div class="about-photo"><img src="workshop_IMG_8643.jpg" alt="Workshop" onerror="this.style.background='#fdedec'"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:3rem;">
+      <span class="section-badge">ממליצים עלינו</span>
+      <h2 class="section-title">מה המורים <span class="accent-text">אומרים</span></h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"הערכה לתרגום חלבון שינתה לחלוטין את האופן שבו תלמידים שלי מבינים ביולוגיה מולקולרית. הם פשוט לא שוכחים את זה!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">מ</div>
+          <div><div class="author-name">מורת ביולוגיה, גבעתיים</div><div class="author-role">תיכון עירוני</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"הסדנה הייתה חוויה מדהימה לכל הצוות! שילוב ה-AI ומדפסות ה-3D הפתיע ועורר השראה. ממליץ בחום."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">א</div>
+          <div><div class="author-name">רכז STEM, הרצליה</div><div class="author-role">חטיבת ביניים</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"ראיתי עלייה ניכרת במוטיבציה של תלמידים אחרי שהשתמשנו בערכת הסליל. הם מבקשים עוד שיעורים כאלה!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">ר</div>
+          <div><div class="author-name">מורת מדעים, ירושלים</div><div class="author-role">בית ספר יסודי</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:3rem;">
+      <span class="section-badge">שאלות נפוצות</span>
+      <h2 class="section-title">יש לכם <span class="accent-text">שאלות?</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">לאיזה גילאים מתאימות הערכות? <span>+</span></div>
+        <div class="faq-a">הערכות מותאמות לחטיבת ביניים ותיכון (כיתות ז׳–י״ב), כולל מגמות ביולוגיה, ביוטכנולוגיה ומדעים. חלק מהערכות מתאימות גם לבית ספר יסודי.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">כמה זמן לוקח להכין שיעור עם הערכה? <span>+</span></div>
+        <div class="faq-a">מורים מדווחים על הכנה של 15–20 דקות בלבד. אנחנו מספקים מדריך מפורט, מצגת מלווה וחומרי עזר מוכנים.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">האם יש ליווי מקצועי למורים? <span>+</span></div>
+        <div class="faq-a">בהחלט! אנחנו מציעים הדרכה ראשונית, קהילת מורים פעילה, ותמיכה שוטפת בוואטסאפ ובמייל.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">איך מזמינים ומה המחיר? <span>+</span></div>
+        <div class="faq-a">המחיר משתנה לפי כמות וסוג הערכה. לחצו על "בקשת הצעת מחיר" ונחזור אליכם תוך 24 שעות.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section">
+  <div class="section-inner" style="max-width:700px">
+    <h2>מוכנים להתחיל?</h2>
+    <p>צרו איתנו קשר היום ונעזור לכם לבחור את הערכה המתאימה ביותר לכיתה שלכם</p>
+    <div class="contact-buttons">
+      <a href="https://wa.me/972503366993" class="whatsapp-btn" target="_blank">💬 צרו קשר בוואטסאפ</a>
+      <a href="https://forms.gle/x3tx63ayCoHSkxfL8" class="contact-form-btn" target="_blank">📋 טופס בקשת הצעת מחיר</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 ECOShoham · ערכות למידה תלת-מימד לחינוך STEM · <a href="https://wa.me/972503366993">050-336-6993</a></p>
+</footer>
+
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/972503366993" class="wa-float" target="_blank">💬 צרו קשר בוואטסאפ</a>
+
+</body>
+</html>
