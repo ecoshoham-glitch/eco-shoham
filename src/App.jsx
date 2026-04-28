@@ -13,7 +13,9 @@ const Blog = lazy(() => import('@/pages/Blog.jsx'));
 const BlogPost = lazy(() => import('@/pages/BlogPost.jsx'));
 const TeacherCommunity = lazy(() => import('@/pages/TeacherCommunity.jsx'));
 const AdminPage = lazy(() => import('@/pages/AdminPage.jsx'));
-const SiteEditor = lazy(() => import('@/pages/SiteEditor.jsx'));
+const SiteEditor = lazy(() => import('@/pages/SiteEditor.
+const Resources = lazy(() => import('@/pages/Resources'));
+
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -34,10 +36,11 @@ function AppRoutes() {
           </Route>
           <Route path="/community" element={<TeacherCommunity />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/editor" element={<SiteEditor />} />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
-      </Suspense>
+          <Route path="/editor" element={<SiteEditor />} />/editor
+          <Route path="/resources" element={<Resources />} />
+          <Route path="*" element={<PageNotFound />} /></Routes>
+      </Routes>
+    </Suspense >
     </>
   );
 }
