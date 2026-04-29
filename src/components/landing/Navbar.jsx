@@ -13,6 +13,7 @@ const navLinks = [
   { label: 'מגזין', href: '/blog' },
   { label: 'קהילת מורים', href: '/community' },
   { label: 'צור קשר', anchor: 'footer' },
+  { label: 'חומרי עזר', href: '/resources' },
   { label: 'ממליצים עלינו', anchor: 'testimonials' },
 ];
 
