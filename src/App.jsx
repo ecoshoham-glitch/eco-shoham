@@ -13,7 +13,7 @@ const Blog = lazy(() => import('@/pages/Blog.jsx'));
 const BlogPost = lazy(() => import('@/pages/BlogPost.jsx'));
 const TeacherCommunity = lazy(() => import('@/pages/TeacherCommunity.jsx'));
 const AdminPage = lazy(() => import('@/pages/AdminPage.jsx'));
-const SiteEditor = lazy(() => import('@/pages/SiteEditor.
+const SiteEditor = lazy(() => import('@/pages/SiteEditor'));
 const Resources = lazy(() => import('@/pages/Resources'));
 
 
