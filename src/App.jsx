@@ -36,11 +36,11 @@ function AppRoutes() {
           </Route>
           <Route path="/community" element={<TeacherCommunity />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/editor" element={<SiteEditor />} />/editor
+          <Route path="/editor" element={<SiteEditor />} />
           <Route path="/resources" element={<Resources />} />
-          <Route path="*" element={<PageNotFound />} /></Routes>
-      </Routes>
-    </Suspense >
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Suspense >
     </>
   );
 }
