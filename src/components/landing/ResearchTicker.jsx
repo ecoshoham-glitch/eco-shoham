@@ -42,7 +42,7 @@ export default function ResearchTicker() {
     const interval = setInterval(() => {
       setDirection(1);
       setCurrentIndex(prev => (prev + STEP) % WIDGETS.length);
-    }, 20000);
+    }, 7000);
     return () => clearInterval(interval);
   }, []);
 

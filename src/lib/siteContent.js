@@ -3,7 +3,8 @@ const STORAGE_KEY = 'ecoshoham_site_content';
 export const defaultContent = {
   hero: {
     badge: 'חדשנות בלמידת מדעים',
-    title: 'ECOShoham: להחזיק את המדע בידיים',
+    title: 'ECOShoham',
+    tagline: 'להחזיק את המדע בידיים',
     subtitle: 'הופכים למידה מופשטת לחוויה מוחשית בלתי נשכחת',
     description: 'ערכות למידה אקטיבית המבוססות על מחקר קוגניטיבי, לשיפור מוכח של עד 55% בהישגי התלמידים. דרך חוויה חושית ומגע פיזי, התלמידים יוצרים עוגני זיכרון חזקים ומפחיתים עומס קוגניטיבי.',
     image: '/images/b82c137a8_Gemini_Generated_Image_ze7oq0ze7oq0ze7o.png',

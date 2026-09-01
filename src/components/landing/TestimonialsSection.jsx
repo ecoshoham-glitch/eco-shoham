@@ -173,7 +173,7 @@ export default function TestimonialsSection() {
           className="flex justify-center mb-8"
         >
           <img
-            src="/images/248561285_WhatsAppImage2025-11-12at142748.png"
+            src="/images/classroom-students-2026.png"
             alt="תלמידים עובדים עם ערכות ECOShoham בכיתה"
             className="w-full max-w-lg rounded-3xl shadow-lg object-cover"
           />

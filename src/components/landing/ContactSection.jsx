@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, Mail, ExternalLink, Bot, User, ChevronLeft, X } from 'lucide-react';
+import { sendChatbotSubmission, sendChatbotWhatsApp } from '@/lib/formSubmissions';
 
 const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSci9SyP-beMilHLWnj4bZuuRNLrXzSGuj7ZDrkHiKeEjB8GfQ/viewform';
 const FORM_SUBMIT = 'https://docs.google.com/forms/d/e/1FAIpQLSci9SyP-beMilHLWnj4bZuuRNLrXzSGuj7ZDrkHiKeEjB8GfQ/formResponse';
@@ -1001,7 +1002,6 @@ function ChatWidget({ onClose }) {
           link: waUrl,
           linkText: '📱 פתחו וואטסאפ לתיאום סדנה',
         }]);
-        window.open(waUrl, '_blank');
         setTimeout(() => {
           setMessages(prev => [...prev, {
             type: 'bot',
@@ -1042,7 +1042,8 @@ function ChatWidget({ onClose }) {
       } else {
         // Not interested — finish the flow
         setTimeout(() => {
-          autoSubmitToGoogleForms(wsData);
+          sendChatbotSubmission(wsData);
+          sendChatbotWhatsApp(wsData);
           markFormCompleted();
           saveUser({ ...wsData, formCompleted: true });
           setMessages(prev => [...prev, {
@@ -1114,7 +1115,8 @@ function ChatWidget({ onClose }) {
     } else {
       const finalData = { ...newData };
       setTimeout(() => {
-        autoSubmitToGoogleForms(finalData);
+        sendChatbotSubmission(finalData);
+        sendChatbotWhatsApp(finalData);
         markFormCompleted();
         setMessages(prev => [...prev, {
           type: 'bot',
@@ -1183,20 +1185,28 @@ function ChatWidget({ onClose }) {
     if (pendingNextStep) {
       const { newData } = pendingNextStep;
       setPendingNextStep(null);
-      // Auto-submit form + open Google Form
       const currentData = { ...data, ...(newData || {}) };
-      const submitted = autoSubmitToGoogleForms(currentData);
+      sendChatbotSubmission(currentData);
+      sendChatbotWhatsApp(currentData);
       markFormCompleted();
       saveUser({ ...currentData, formCompleted: true });
       const formUrl = buildFormUrl();
-      window.open(formUrl, '_blank');
+      const waUrl = buildWhatsAppMessage();
       setTimeout(() => {
-        setMessages(prev => [...prev, {
-          type: 'bot',
-          text: submitted
-            ? `מעולה! 🙏\n\nהפרטים שמילאת כבר הוזנו אוטומטית בטופס.\nנשמח אם תשלים/י את השדות הנותרים כדי שנוכל לחזור אליך בהקדם עם כל המידע הרלוונטי ✅`
-            : `מעולה! 🙏\n\nלא הצלחנו לשלוח את הטופס אוטומטית, לכן פתחנו עבורך הודעת וואטסאפ עם הפרטים שמילאת.\nנשמח גם אם תשלים/י את הטופס כדי שנוכל לחזור אליך בהקדם ✅`,
-        }]);
+        setMessages(prev => [...prev,
+          {
+            type: 'bot',
+            text: `מעולה! 🙏\n\nלחצו כאן כדי לשלוח את הפרטים למוטי ישירות בוואטסאפ 👇`,
+            link: waUrl,
+            linkText: '📱 שלחו פרטים בוואטסאפ',
+          },
+          {
+            type: 'bot',
+            text: `או מלאו את הטופס המפורט 👇`,
+            link: formUrl,
+            linkText: '📋 למילוי הטופס',
+          },
+        ]);
         setFinished(true);
       }, 400);
     } else {
@@ -1225,6 +1235,9 @@ function ChatWidget({ onClose }) {
       if (kitInfo) params.set(FORM_FIELDS.kitType, kitInfo);
       if (finalData.timing && finalData.timing !== '—') params.set(FORM_FIELDS.timing, finalData.timing);
       if (finalData.workshop && finalData.workshop !== '—') params.set(FORM_FIELDS.workshop, finalData.workshop);
+      params.set('fvv', '1');
+      params.set('fbzx', Math.random().toString(36).substring(2) + Date.now());
+      params.set('pageHistory', '0');
 
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
@@ -1370,7 +1383,7 @@ function ChatWidget({ onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full hover:bg-primary-foreground/15 flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full hover:bg-[#1ea952]-foreground/15 flex items-center justify-center transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -1406,26 +1419,32 @@ function ChatWidget({ onClose }) {
               </Button>
               <Button
                 onClick={() => {
-                  // No questions — auto-submit form + open Google Form with pre-filled data
                   const currentData = { ...data, ...(pendingNextStep?.newData || {}) };
-                  const submitted = autoSubmitToGoogleForms(currentData);
+                  sendChatbotSubmission(currentData);
+                  sendChatbotWhatsApp(currentData);
                   markFormCompleted();
                   saveUser({ ...currentData, formCompleted: true });
                   const formUrl = buildFormUrl();
-                  window.open(formUrl, '_blank');
+                  const waUrl = buildWhatsAppMessage();
                   setMessages(prev => [...prev,
                     { type: 'user', text: 'אין שאלות, נמשיך' },
                     {
                       type: 'bot',
-                      text: submitted
-                        ? `מעולה! 🙏\n\nהפרטים שמילאת כבר הוזנו אוטומטית בטופס.\nנשמח אם תשלים/י את השדות הנותרים כדי שנוכל לחזור אליך בהקדם עם כל המידע הרלוונטי ✅`
-                        : `מעולה! 🙏\n\nלא הצלחנו לשלוח את הטופס אוטומטית, לכן פתחנו עבורך הודעת וואטסאפ עם הפרטים שמילאת.\nנשמח גם אם תשלים/י את הטופס כדי שנוכל לחזור אליך בהקדם ✅`,
+                      text: `מעולה! 🙏\n\nלחצו כאן כדי לשלוח את הפרטים למוטי ישירות בוואטסאפ 👇`,
+                      link: waUrl,
+                      linkText: '📱 שלחו פרטים בוואטסאפ',
+                    },
+                    {
+                      type: 'bot',
+                      text: `או מלאו את הטופס המפורט 👇`,
+                      link: formUrl,
+                      linkText: '📋 למילוי הטופס',
                     },
                   ]);
                   setPendingNextStep(null);
                   setFinished(true);
                 }}
-                className="w-full rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-4 gap-2 text-sm"
+                className="w-full rounded-xl bg-primary hover:bg-[#1ea952]/90 text-white font-bold py-4 gap-2 text-sm"
               >
                 👍 אין שאלות, נמשיך למילוי הטופס
               </Button>
@@ -1444,16 +1463,17 @@ function ChatWidget({ onClose }) {
               <Button
                 onClick={() => {
                   const formUrl = buildFormUrl();
-                  window.open(formUrl, '_blank');
                   markFormCompleted();
                   setMessages(prev => [...prev, {
                     type: 'bot',
-                    text: `📋 פתחנו עבורך את טופס הפרטים — חלק מהשדות כבר מולאו.\nנשמח שתשלים/י את הפרטים הנותרים כדי שנוכל לחזור אליך בהקדם 🙏`,
+                    text: `📋 לחצו כאן למילוי הטופס — חלק מהשדות כבר מולאו 🙏`,
+                    link: formUrl,
+                    linkText: '📋 פתחו את הטופס',
                   }]);
                   setReturningNoForm(false);
                   setFinished(true);
                 }}
-                className="w-full rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-4 gap-2 text-sm"
+                className="w-full rounded-xl bg-primary hover:bg-[#1ea952]/90 text-white font-bold py-4 gap-2 text-sm"
               >
                 📋 מילוי הטופס עכשיו
               </Button>
@@ -1510,7 +1530,7 @@ function ChatWidget({ onClose }) {
                     dir="ltr"
                     type="text"
                   />
-                  <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-primary/90 flex-shrink-0 h-10 w-10">
+                  <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-[#1ea952]/90 flex-shrink-0 h-10 w-10">
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                 </form>
@@ -1577,7 +1597,7 @@ function ChatWidget({ onClose }) {
                     dir={awaitingLastName ? 'rtl' : (currentStepData.dir || 'rtl')}
                     type={awaitingLastName ? 'text' : (currentStepData.inputType || 'text')}
                   />
-                  <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-primary/90 flex-shrink-0 h-10 w-10">
+                  <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-[#1ea952]/90 flex-shrink-0 h-10 w-10">
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                 </form>
@@ -1699,7 +1719,7 @@ function ChatWidget({ onClose }) {
                   className="flex-1 rounded-xl border-border/60 text-sm"
                   dir="rtl"
                 />
-                <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-primary/90 flex-shrink-0 h-10 w-10">
+                <Button type="submit" size="icon" className="rounded-xl bg-primary hover:bg-[#1ea952]/90 flex-shrink-0 h-10 w-10">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
               </form>
@@ -1779,7 +1799,7 @@ export default function ContactSection() {
 
               <button
                 onClick={() => setIsOpen(true)}
-                className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+                className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#25D366] text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center group"
               >
                 {showPulse && (
                   <>
@@ -1787,7 +1807,7 @@ export default function ContactSection() {
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-secondary border-2 border-white animate-bounce" />
                   </>
                 )}
-                <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
+                <Bot className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
               </button>
             </motion.div>
           )}

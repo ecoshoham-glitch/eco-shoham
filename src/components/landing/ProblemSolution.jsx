@@ -55,7 +55,7 @@ export default function ProblemSolution() {
         >
           <div className="text-center mb-8">
             <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary mb-4">
-              {content.about.title.replace('ECOShoham', '').trim()} <span className="text-transparent bg-clip-text bg-gradient-to-l from-secondary to-accent">ECOShoham</span>?
+              {content.about.title.replace('ECOShoham', '').replace(/\?/g, '').trim()} <span className="text-transparent bg-clip-text bg-gradient-to-l from-secondary to-accent">ECOShoham</span>?
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {content.about.description}

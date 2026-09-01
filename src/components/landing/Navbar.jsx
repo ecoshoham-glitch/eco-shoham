@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const isHome = () => window.location.pathname === '/';
 
 const navLinks = [
@@ -12,8 +11,8 @@ const navLinks = [
   { label: 'חדשנות פדגוגית', anchor: 'problem' },
   { label: 'מגזין', href: '/blog' },
   { label: 'קהילת מורים', href: '/community' },
-  { label: 'צור קשר', anchor: 'footer' },
   { label: 'חומרי עזר', href: '/resources' },
+  { label: 'צור קשר', anchor: 'footer' },
   { label: 'ממליצים עלינו', anchor: 'testimonials' },
 ];
 
@@ -25,16 +24,19 @@ const getHref = (link) => {
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hasAnimated = useRef(false);
+  const shouldAnimate = !hasAnimated.current;
+  if (shouldAnimate) hasAnimated.current = true;
 
   return (
     <motion.nav
-      initial={{ y: -100 }}
+      initial={shouldAnimate ? { y: -100 } : false}
       animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background shadow-md shadow-primary/10`}
       dir="rtl"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
@@ -46,19 +48,27 @@ export default function Navbar() {
             </span>
           </a>
 
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-5 xl:gap-7">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={getHref(link)}
-                className="text-sm xl:text-base font-semibold text-foreground/80 hover:text-primary transition-colors relative group whitespace-nowrap"
-              >
-                {link.label}
-                <span className="absolute -bottom-1 right-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300" />
-              </a>
-            ))}
-            <div className="flex items-center gap-2 border-r border-border/40 pr-5 xl:pr-7">
+          {/* Desktop Nav — מרווח אופקי אחיד בין טאבים */}
+          <div className="hidden lg:flex items-center min-w-0 shrink mr-8 xl:mr-10">
+            <nav
+              className="flex items-center gap-x-6"
+              aria-label="ניווט ראשי"
+            >
+              {navLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={getHref(link)}
+                  {...(link.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                  className="text-sm xl:text-base font-semibold text-foreground/80 hover:text-primary transition-colors relative group whitespace-nowrap"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 right-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300" />
+                </a>
+              ))}
+            </nav>
+            <div className="flex items-center gap-3 ms-6 ps-6 border-s border-border/40 shrink-0">
               {user ? (
                 <>
                   <a
@@ -68,6 +78,7 @@ export default function Navbar() {
                     🔐 מנהל
                   </a>
                   <button
+                    type="button"
                     onClick={() => logout()}
                     className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap"
                   >
@@ -82,24 +93,25 @@ export default function Navbar() {
                   🔓 התחבר
                 </a>
               )}
+              <Button
+                asChild
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-5 xl:px-6 text-sm shadow-lg shadow-accent/25 whitespace-nowrap"
+              >
+                <a href={isHome() ? '#products' : '/#products'} className="flex items-center gap-1.5">
+                  גלו את הערכות
+                  <ChevronLeft className="w-4 h-4" />
+                </a>
+              </Button>
             </div>
-            <Button
-              asChild
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-5 xl:px-6 text-sm shadow-lg shadow-accent/25 whitespace-nowrap"
-            >
-              <a href={isHome() ? '#products' : '/#products'} className="flex items-center gap-1.5">
-                גלו את הערכות
-                <ChevronLeft className="w-4 h-4" />
-              </a>
-            </Button>
           </div>
 
           {/* Mobile/Tablet Toggle */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            type="button"
+            className="lg:hidden p-3 -m-1 rounded-xl hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
         </div>
       </div>
@@ -118,9 +130,13 @@ export default function Navbar() {
                 <a
                   key={link.label}
                   href={getHref(link)}
-                  className="block py-2 text-lg font-medium text-foreground/80 hover:text-primary transition-colors"
+                  {...(link.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                  className="block py-3 text-lg font-medium text-foreground/80 hover:text-primary active:text-primary transition-colors touch-manipulation"
                   onClick={(e) => {
                     setMobileOpen(false);
+                    if (link.external) return;
                     if (link.anchor) {
                       e.preventDefault();
                       setTimeout(() => {
@@ -133,16 +149,43 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              {user?.role === 'admin' && (
-                <a
-                  href="/editor"
-                  className="block py-2 text-lg font-bold text-primary"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  ✏️ ערוך אתר
-                </a>
-              )}
-
+              <div className="border-t border-border/40 pt-3 mt-3 space-y-1">
+                {user ? (
+                  <>
+                    <a
+                      href="/admin"
+                      className="block py-3 text-lg font-bold text-primary active:text-primary/70 touch-manipulation"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      🔐 לוח בקרה
+                    </a>
+                    {user.role === 'admin' && (
+                      <a
+                        href="/editor"
+                        className="block py-3 text-lg font-bold text-primary active:text-primary/70 touch-manipulation"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        ✏️ ערוך אתר
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { logout(); setMobileOpen(false); }}
+                      className="block py-3 text-lg font-medium text-destructive active:text-destructive/70 touch-manipulation"
+                    >
+                      התנתק
+                    </button>
+                  </>
+                ) : (
+                  <a
+                    href="/admin"
+                    className="block py-3 text-lg font-bold text-primary active:text-primary/70 touch-manipulation"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    🔓 התחבר
+                  </a>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

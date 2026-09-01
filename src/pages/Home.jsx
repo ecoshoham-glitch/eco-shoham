@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import ResearchTicker from '../components/landing/ResearchTicker';
+import UrgencyOffer from '../components/landing/UrgencyOffer';
 import ProblemSolution from '../components/landing/ProblemSolution';
 import ImageBanner from '../components/landing/ImageBanner';
 import ScienceProof from '../components/landing/ScienceProof';
@@ -19,6 +20,7 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <div className="relative z-10 bg-background">
+        <UrgencyOffer />
         <ResearchTicker />
         <ProblemSolution />
         <ImageBanner />

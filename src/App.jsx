@@ -19,7 +19,7 @@ const Resources = lazy(() => import('@/pages/Resources'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
   return null;
 }
 
@@ -27,7 +27,7 @@ function AppRoutes() {
   return (
     <>
       <ScrollToTop />
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div>Loading...</div></div>}>
+      <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route element={<PagesLayout />}>

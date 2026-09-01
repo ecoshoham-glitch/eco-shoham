@@ -1,6 +1,8 @@
 #env
 .env
 .env.*
+# תבנית ללא סודות אמיתיים (VITE_ADMIN_PASSWORD ריק) — מיועדת להיות ב-git
+!.env.example
 
 # Logs
 /logs
@@ -41,3 +43,11 @@ workshop_IMG_*.jpg
 workshop_IMG_*.jpeg
 Gemini_Generated_Image_*.png
 Gemini_Generated_Image_*.jpeg
+
+# הגדרות הרשאה מקומיות של Claude Code — אישית לפי המכשיר, לא חלק מהאתר
+.claude/settings.local.json
+
+# קובץ וידאו לא-בשימוש (135MB, אין שום reference אליו ב-src/) — לא הוכנס
+# ל-git כדי לא לנפח את ההיסטוריה לצמיתות; נשאר מקומית על הדיסק בלבד.
+# (בלי מרכאות — gitignore לא תומך בציטוט בסגנון shell לרווחים בשם קובץ)
+אריאלה לילינטל סרטון מטושטש.mov
