@@ -1,1 +1,9 @@
+# פרויקט המולקולות (public/molecules/, אתר סטטי עצמאי, לא route של React
+# Router) — חייב לבוא *לפני* כלל ה-SPA הכללי למטה, אחרת /molecules/?aa=gly
+# וכל נתיב אחר תחת /molecules/ שאינו קובץ סטטי קיים היו מקבלים בטעות את
+# index.html הראשי של האתר. קבצים סטטיים אמיתיים (glb/usdz/js/css שקיימים
+# בפועל בפלט הבנייה תחת /molecules/) מוגשים ישירות ע"י Netlify ולא מגיעים
+# לכלל הזה בכלל — הוא רק "רשת ביטחון" לכל נתיב תחת /molecules/ שאינו קובץ.
+/molecules/*  /molecules/index.html  200
+
 /*    /index.html   200

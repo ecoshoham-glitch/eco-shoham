@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>בניית שרשרת פפטידית</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<!-- כותרת שם הרצף: קבועה בראש העמוד, נגזרת ישירות ממערך ה-sequence
+     המרכזי (app.js) — לא ממערך שמות נפרד. קודי שלוש אותיות באנגלית
+     בלבד, בכיוון N->C. aria-live="polite" כדי שקוראי מסך יכריזו על
+     שינויים בלי להפריע לזרימה. -->
+<header id="sequence-banner" class="sequence-banner" aria-live="polite">
+  <span id="sequence-banner-name" class="sequence-banner-name"></span>
+  <span id="sequence-banner-subtitle" class="sequence-banner-subtitle"></span>
+</header>
+
+<!-- מחוץ ל-qr-landing/app-shell בכוונה (כמו הכותרת למעלה) — כדי שתהיה
+     גלויה בכל מסך: הודעת "הרצף הגיע לאורך המרבי" (addAminoAcid,
+     sequence-storage.js) יכולה להיווצר גם דרך סריקת QR במסך הנחיתה
+     וגם דרך הכפתורים במסך בניית השרשרת הרגיל. -->
+<p id="sequence-limit-message" class="sequence-limit-message" hidden></p>
+
+<!-- דף אבחון AR: ?debug=ar (אפשר לשלב עם ?aa=/?sequence=, או לבדו — ברירת
+     מחדל: Gly). אין מידע אישי — רק userAgent/GLB/מצב AR טכני. מוצג ע"י
+     app.js/ar-viewer.js, לא הדפדפן עצמו. -->
+<div id="ar-debug-panel" class="ar-debug-panel" hidden role="region" aria-label="דף אבחון AR">
+  <h2>AR Debug (?debug=ar)</h2>
+  <pre id="ar-debug-content" class="ar-debug-content"></pre>
+  <button type="button" id="ar-debug-close" class="ar-debug-close">סגור אבחון</button>
+</div>
+
+<!-- מסך פתיחה ייעודי לסריקת QR (?aa=xxx בלבד) — נעלם ומחזיר את אפליקציית
+     בניית השרשרת המלאה בלחיצה על "המשך", בלי טעינה מחדש של הדף. -->
+<div id="qr-landing" class="qr-landing" hidden role="dialog" aria-label="פתיחה מהירה של חומצת אמינו">
+  <div class="qr-landing-card">
+    <div class="qr-landing-title">
+      <span id="qr-landing-he" class="qr-landing-he"></span>
+      <span id="qr-landing-en" class="qr-landing-en" dir="ltr"></span>
+    </div>
+    <div id="qr-landing-three" class="qr-landing-three" dir="ltr"></div>
+    <div id="qr-landing-preview-slot" class="qr-landing-preview-slot"></div>
+    <!-- אנדרואיד: קישורי Intent ישירים ל-Scene Viewer (עוקפים לגמרי את
+         הלוגיקה הפנימית של model-viewer.activateAR()). "Adjustable" הוא
+         הכפתור הראשי (resizable=true, בלי ar-scale="fixed" — מאפשר
+         צביטה/הזזה/סיבוב טבעיים). "Stable" הוא אפשרות משנית, למקרה של
+         הגדלה בטעות (resizable=false בקישור הזה בלבד — לא גלובלי).
+         activateAR() נשמר כאפשרות נוספת (לא הוסר), לא כברירת מחדל. -->
+    <div id="qr-android-ar-block" class="android-only">
+      <p id="qr-not-supported-message" class="qr-compat-message" hidden>AR is not supported on this device.</p>
+      <p id="qr-android-compat-message" class="qr-compat-message">
+        Android AR requires an ARCore-supported device, an updated Chrome browser, Google app, and Google Play Services for AR.
+        <a href="https://developers.google.com/ar/devices" target="_blank" rel="noopener">Check supported devices</a>
+      </p>
+      <a id="qr-adjustable-ar-link" class="qr-ar-button" href="#" hidden>Open adjustable AR</a>
+      <p id="qr-adjustable-hint" class="qr-landing-hint" hidden>Drag to move or rotate. Pinch gently with two fingers to resize.</p>
+      <a id="qr-stable-ar-link" class="qr-ar-button qr-ar-button-secondary" href="#" hidden>Open stable AR</a>
+      <p id="qr-stable-hint" class="qr-landing-hint" hidden>Fixed-size AR prevents accidental resizing.</p>
+      <p class="qr-landing-hint">איבדת את המולקולה? חזור לעמוד זה ולחץ שוב על אחד הכפתורים — היא תיפתח שוב בגודל ההתחלתי.</p>
+      <button type="button" id="qr-ar-button" class="qr-ar-button qr-ar-button-secondary" disabled>הצג את המולקולה ב-AR (activateAR)</button>
+      <div id="qr-android-update-links" class="qr-update-links" hidden>
+        <span>עדכון: </span>
+        <a href="https://play.google.com/store/apps/details?id=com.android.chrome" target="_blank" rel="noopener">Chrome</a>
+        <a href="https://play.google.com/store/apps/details?id=com.google.android.googlequicksearchbox" target="_blank" rel="noopener">Google app</a>
+        <a href="https://play.google.com/store/apps/details?id=com.google.ar.core" target="_blank" rel="noopener">Google Play Services for AR</a>
+      </div>
+      <div id="qr-comparison-block" class="qr-comparison-block" hidden>
+        <p class="qr-comparison-label">בדיקה משווה (זמני, לאבחון בלבד):</p>
+        <a id="qr-comparison-official-link" class="qr-comparison-link" href="#">פתח מודל רשמי של Google ב-Scene Viewer</a>
+        <a id="qr-comparison-ours-link" class="qr-comparison-link" href="#">פתח את המודל שלנו ב-Scene Viewer</a>
+        <p class="qr-comparison-note">אם גם המודל הרשמי לא נפתח — הבעיה במכשיר/ARCore/Google app. אם רק שלנו לא נפתח — הבעיה בקובץ/Intent.</p>
+      </div>
+      <!-- model-viewer.min.js הנוכחי (בדקנו בקוד המקור בפועל) לא חושף API
+           ציבורי לשינוי scale/מיקום בזמן session WebXR פעיל שהוא מפעיל
+           בעצמו — לכן ה-AR החי עם שליטה אמיתית (webxr-ar.js) הוא מנוע
+           WebXR עצמאי שכתוב כאן ישירות (ללא ספרייה חדשה), לא מבוסס
+           model-viewer בכלל. מוצג רק כש-WebXR נתמך בפועל במכשיר. -->
+      <p id="qr-webxr-status" class="qr-webxr-status" hidden></p>
+      <button type="button" id="qr-webxr-live-ar-button" class="qr-ar-button qr-ar-button-secondary" hidden>AR חי — סיבוב/הגדלה בזמן אמת (ניסיוני)</button>
+    </div>
+    <!-- iPhone/iPad: קישור Quick Look תקני של Safari (rel="ar") ישירות לקובץ
+         USDZ קבוע — לא תלוי בזיהוי AR/JS של model-viewer בכלל, ולכן אמין
+         יותר מהפעלה אוטומטית. מוצג רק ב-iOS (isIOS() ב-ar-viewer.js),
+         ומוצג/מוסתר בלעדית מול הבלוק של אנדרואיד. -->
+    <a id="qr-ios-ar-link" class="qr-ar-button ios-only" rel="ar" href="#" hidden>הצג את המולקולה ב-AR</a>
+    <p id="qr-ios-hint" class="qr-landing-hint ios-only" hidden>Drag the molecule to move it. Pinch with two fingers to resize it.</p>
+    <p id="qr-landing-hint" class="qr-landing-hint">לחיצה אחת תבקש אישור לשימוש במצלמה.</p>
+    <p id="qr-landing-unsupported" class="qr-landing-unsupported" hidden>
+      המכשיר או הדפדפן הנוכחיים אינם תומכים ב-AR — אפשר לצפות במודל התלת-ממדי כאן למעלה.
+    </p>
+    <button type="button" id="qr-landing-continue" class="qr-landing-continue">המשך לבניית השרשרת</button>
+
+    <!-- "המשך בניית השרשרת": האזור הזה תמיד קיים במסך הנחיתה (לא רק
+         "אחרי חזרה מ-AR" — אי אפשר לזהות את הרגע הזה באופן אמין, ואין
+         בכך צורך: Quick Look/Scene Viewer הם אפליקציות/תצוגות מערכת
+         נפרדות שלא מנווטות את הדף כלל, כך שהטאב נשאר בדיוק על מסך
+         הנחיתה הזה כל הזמן, גם לפני וגם אחרי ה-AR עצמו). מאפשר להמשיך
+         לסרוק חומצות נוספות ולפתוח מחדש AR מאוחד בלי לצאת חזרה למסך
+         בניית השרשרת הרגיל. qr-scanner.js מטפל בסריקה בפועל. -->
+    <div class="qr-continue-chain">
+      <h3 class="qr-continue-chain-title">המשך בניית השרשרת</h3>
+      <p class="qr-continue-chain-hint">
+        מצב ה-AR נסגר לצורך הסריקה. סרוק את קוד ה-QR הבא, והרצף המעודכן יישמר וייפתח מחדש ב-AR.
+      </p>
+      <button type="button" id="qr-scan-more-button" class="qr-ar-button qr-ar-button-secondary">סרוק חומצה אמינית נוספת</button>
+      <button type="button" id="qr-reshow-ar-button" class="qr-ar-button qr-ar-button-secondary">הצג שוב את הרצף ב-AR</button>
+      <button type="button" id="qr-undo-last-button" class="qr-ar-button qr-ar-button-secondary">בטל את החומצה האחרונה</button>
+      <button type="button" id="qr-reset-sequence-button" class="qr-ar-button qr-ar-button-secondary">איפוס הרצף</button>
+    </div>
+
+    <!-- רישום אבחון גלוי (לא רק Console) — כדי לאתר תקלות AR בפועל
+         במכשיר בלי צורך בחיבור לכלי פיתוח מרוחקים. -->
+    <div id="ar-diag-log" class="ar-diag-log" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- סורק QR בתוך האתר (qr-scanner.js) — מבקש מצלמה רק בלחיצה מפורשת על
+     "סרוק חומצה אמינית נוספת" למעלה, לא בטעינת הדף. אלמנט top-level
+     נפרד (לא בתוך qr-landing) כדי שיוכל להיפתח מעל כל מסך. -->
+<div id="qr-scanner-overlay" class="qr-scanner-overlay" hidden role="dialog" aria-label="סריקת קוד QR">
+  <div class="qr-scanner-frame-wrap">
+    <video id="qr-scanner-video" class="qr-scanner-video" playsinline muted autoplay></video>
+    <div class="qr-scanner-frame" aria-hidden="true"></div>
+  </div>
+  <p class="qr-scanner-hint">כוונו את המצלמה אל קוד ה-QR</p>
+  <p id="qr-scanner-error" class="qr-scanner-error" hidden></p>
+  <button type="button" id="qr-scanner-cancel" class="qr-ar-button qr-ar-button-secondary">ביטול</button>
+  <p class="qr-scanner-native-fallback-hint">
+    אפשר גם לסגור ולסרוק עם מצלמת הטלפון הרגילה — הדף ייפתח מחדש עם קוד ה-QR שנסרק.
+  </p>
+</div>
+
+<!-- AR חי (webxr-ar.js): מנוע WebXR עצמאי, כתוב ידנית (בלי model-viewer
+     ובלי ספרייה חדשה) — כי model-viewer אינו חושף שליטה בזמן session
+     פעיל (ראו הערה ליד qr-webxr-live-ar-button). הקנבס הוא ה-XRWebGLLayer
+     בפועל (הדפדפן משתלט על הצגתו בזמן session, לא CSS רגיל); שכבת
+     ה-DOM Overlay (webxr-ar-overlay) היא הכפתורים הדו-ממדיים בלבד, לא
+     חלק מה-canvas. הקנבס hidden כברירת מחדל; שכבת ה-Overlay מוסתרת
+     ב-opacity/pointer-events בלבד (לא hidden) — ראו הערה למטה. -->
+<canvas id="webxr-ar-canvas" class="webxr-ar-canvas" hidden></canvas>
+<!-- בלי [hidden]/display:none על השכבה הזו עצמה: מפרט WebXR DOM Overlays
+     דורש שה-root יהיה "מוצג בפועל" (rendered) כבר ברגע requestSession —
+     אחרת חלק מהדפדפנים פשוט מתעלמים מה-feature. שקיפות/pointer-events
+     (לא display) הם המנגנון להסתרה בפועל לפני/אחרי session — ראו CSS. -->
+<div id="webxr-ar-overlay" class="webxr-ar-overlay">
+  <p id="webxr-ar-hint" class="webxr-ar-hint">געו במשטח בתמונה כדי למקם את המולקולה.</p>
+  <div class="webxr-ar-controls">
+    <div class="webxr-ar-row">
+      <button type="button" id="webxr-rotate-left" class="webxr-ar-btn" aria-label="סיבוב שמאלה">⟲</button>
+      <button type="button" id="webxr-rotate-right" class="webxr-ar-btn" aria-label="סיבוב ימינה">⟳</button>
+    </div>
+    <div class="webxr-ar-row">
+      <button type="button" id="webxr-zoom-out" class="webxr-ar-btn">－</button>
+      <span id="webxr-scale-readout" class="webxr-ar-readout">100%</span>
+      <button type="button" id="webxr-zoom-in" class="webxr-ar-btn">＋</button>
+    </div>
+    <div class="webxr-ar-row">
+      <label for="webxr-speed-select" class="webxr-ar-label">מהירות סיבוב/הגדלה:</label>
+      <select id="webxr-speed-select" class="webxr-ar-select">
+        <option value="0.5">איטי</option>
+        <option value="1" selected>רגיל</option>
+        <option value="2">מהיר</option>
+      </select>
+    </div>
+    <!-- הוספת חומצה תוך כדי session פעיל (בלי לצאת מ-AR) — בונה מחדש
+         את הגיאומטריה דרך webxr-ar.js:addResidueToLiveAr, לא GLB סטטי. -->
+    <div class="webxr-ar-row">
+      <button type="button" id="webxr-add-gly" class="webxr-ar-add-btn">+Gly</button>
+      <button type="button" id="webxr-add-ala" class="webxr-ar-add-btn">+Ala</button>
+      <button type="button" id="webxr-add-ser" class="webxr-ar-add-btn">+Ser</button>
+    </div>
+    <button type="button" id="webxr-ar-exit" class="webxr-ar-btn webxr-ar-exit">סגור AR</button>
+  </div>
+</div>
+
+<div id="app-shell" class="app-shell">
+
+  <div class="viewer-pane">
+    <div id="molecule-viewer" class="molecule-viewer"></div>
+
+    <div class="viewer-messages">
+      <p id="chemistry-error" class="chemistry-error" hidden></p>
+      <p id="peptide-disclaimer" class="peptide-disclaimer" hidden>
+        מבנה פפטידי אידאלי ומוארך — אינו חיזוי של קיפול החלבון
+      </p>
+    </div>
+
+    <!-- כרטיס מידע מאוחד: מחליף את "חומצת האמינו האחרונה" ואת חלונית ה-R הישנות -->
+    <div id="info-card" class="info-card" hidden role="region" aria-label="מידע על החומצה הנבחרת">
+      <button type="button" id="info-card-close" class="info-card-close" aria-label="סגור כרטיס מידע" title="סגור">✕</button>
+      <div class="info-card-title">
+        <span id="info-card-he" class="info-card-he"></span>
+        <span id="info-card-en" class="info-card-en"></span>
+      </div>
+      <div class="info-card-rows">
+        <span class="info-card-row"><span class="info-card-key">קוד:</span> <span id="info-card-three" dir="ltr"></span></span>
+        <span class="info-card-row"><span class="info-card-key">מיקום:</span> <span id="info-card-position"></span></span>
+        <span class="info-card-row"><span class="info-card-key">שייר R:</span> <span id="info-card-r" dir="ltr"></span></span>
+      </div>
+      <div id="info-card-terminus" class="info-card-terminus" hidden></div>
+    </div>
+
+    <!-- סרגל כלים אחד מאוחד: כל פקדי המולקולה -->
+    <div class="toolbar" role="toolbar" aria-label="פקדי תצוגת המולקולה">
+      <div class="toolbar-group" role="group" aria-label="מצב אינטראקציה">
+        <button type="button" id="mode-rotate-btn" class="tb-btn" aria-pressed="true" title="מצב סיבוב" aria-label="מצב סיבוב" onclick="setInteractionMode('rotate')">🔄</button>
+        <button type="button" id="mode-move-btn" class="tb-btn" aria-pressed="false" title="מצב הזזה" aria-label="מצב הזזה" onclick="setInteractionMode('move')">✋</button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="הזזת המולקולה">
+        <button type="button" class="tb-btn" title="הזז שמאלה" aria-label="הזז שמאלה" onclick="panView(-1,0)">◀</button>
+        <button type="button" class="tb-btn" title="הזז למעלה" aria-label="הזז למעלה" onclick="panView(0,-1)">▲</button>
+        <button type="button" class="tb-btn" title="הזז למטה" aria-label="הזז למטה" onclick="panView(0,1)">▼</button>
+        <button type="button" class="tb-btn" title="הזז ימינה" aria-label="הזז ימינה" onclick="panView(1,0)">▶</button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="גודל תצוגה">
+        <button type="button" class="tb-btn" title="הקטנה עדינה" aria-label="הקטנה עדינה" onclick="zoomStep(-1)">−</button>
+        <input type="range" id="zoom-slider" class="tb-slider" min="5" max="95" value="50" step="1"
+               title="מחוון גודל" aria-label="מחוון גודל" oninput="setZoomFromSlider(this.value)" />
+        <button type="button" class="tb-btn" title="הגדלה עדינה" aria-label="הגדלה עדינה" onclick="zoomStep(1)">+</button>
+        <button type="button" class="tb-btn" title="התאם למסך" aria-label="התאם למסך" onclick="fitToScreen()">⤢</button>
+        <button type="button" class="tb-btn" title="מרכז את המולקולה" aria-label="מרכז את המולקולה" onclick="centerView()">⊙</button>
+      </div>
+      <div class="toolbar-group">
+        <button type="button" id="btn-fullscreen" class="tb-btn" title="מסך מלא" aria-label="מסך מלא" onclick="toggleFullscreen()">⛶</button>
+      </div>
+    </div>
+
+    <div class="viewer-toggles">
+      <label class="toggle-item">
+        <input type="checkbox" id="toggle-atom-labels" checked onchange="toggleAtomLabels()" />
+        הצג שמות אטומים
+      </label>
+      <label class="toggle-item">
+        <input type="checkbox" id="toggle-r-group" checked onchange="toggleRGroup()" />
+        סימון שייר R
+      </label>
+    </div>
+
+    <button type="button" id="legend-button" class="legend-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-panel" onclick="toggleLegend()">
+      מקרא
+    </button>
+    <div id="legend-panel" class="legend-panel" hidden role="dialog" aria-label="מקרא צבעים וסימונים">
+      <div class="legend-panel-header">
+        <strong>מקרא צבעים וסימונים</strong>
+        <button type="button" class="legend-close" aria-label="סגור מקרא" title="סגור" onclick="closeLegend()">✕</button>
+      </div>
+      <div class="legend-section">
+        <h3>צבעי אטומים (CPK)</h3>
+        <div id="legend-cpk-list" class="legend-list"></div>
+      </div>
+      <div class="legend-section">
+        <h3>סימונים לימודיים</h3>
+        <div class="legend-list">
+          <span class="legend-item"><span class="legend-swatch legend-swatch-ca"></span>Cα שנבחר</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch-halo"></span>חומצת האמינו שנבחרה</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch-box"></span>קבוצת שייר R</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch-bond"></span>קשר פפטידי</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch-arrow"></span>כיוון השרשרת N → C</span>
+        </div>
+        <p class="legend-note">אדום <em>מלא</em> על אטום = חמצן (CPK). מסגרת <em>מג'נטה</em> = קבוצת R — אלה שני דברים שונים.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-pane">
+    <header class="app-header">
+      <h1>בניית שרשרת פפטידית</h1>
+      <p class="subtitle">בחרו חומצה אמינית, הוסיפו אותה לרצף ובחנו את המבנה התלת-ממדי.</p>
+    </header>
+
+    <ol class="stage-indicator" aria-label="שלבי הבנייה">
+      <li class="stage-item">1. בחירת חומצה</li>
+      <li class="stage-item">2. בניית השרשרת</li>
+      <li class="stage-item">3. צפייה בתלת-ממד ו-AR</li>
+    </ol>
+
+    <section class="scan-buttons" aria-label="בחירת חומצת אמינו">
+      <button type="button" class="scan-btn scan-gly" aria-pressed="false" onclick="addAminoAcid('gly')">
+        <span class="scan-btn-code" dir="ltr">Gly</span>
+        <span class="scan-btn-name">גליצין</span>
+      </button>
+      <button type="button" class="scan-btn scan-ala" aria-pressed="false" onclick="addAminoAcid('ala')">
+        <span class="scan-btn-code" dir="ltr">Ala</span>
+        <span class="scan-btn-name">אלנין</span>
+      </button>
+      <button type="button" class="scan-btn scan-ser" aria-pressed="false" onclick="addAminoAcid('ser')">
+        <span class="scan-btn-code" dir="ltr">Ser</span>
+        <span class="scan-btn-name">סרין</span>
+      </button>
+    </section>
+
+    <section class="ar-section" id="ar-section" hidden>
+      <h2>תצוגת AR</h2>
+      <model-viewer
+        id="ar-model-viewer"
+        camera-controls
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        class="ar-model-viewer"
+      >
+        <button slot="ar-button" id="ar-button" class="ar-button" hidden>הצג ב-AR</button>
+      </model-viewer>
+      <p id="ar-ready-message" class="ar-ready-message" hidden>המודל מוכן ל-AR — לחצו על "הצג ב-AR" ואשרו שימוש במצלמה.</p>
+      <p id="ar-missing-message" class="ar-missing-message" hidden>קובץ AR חסר לחומצה הזו.</p>
+      <p id="ar-unsupported-sequence-message" class="ar-missing-message" hidden>
+        AR זמין כרגע רק לחומצה בודדת או לרצפי-דוגמה קבועים (Gly-Gly, Gly-Ala-Ser). תמיכה ב-AR לכל רצף שנבנה באופן חופשי עדיין בתכנון.
+      </p>
+      <p id="ar-fallback-message" class="ar-fallback-message" hidden></p>
+      <p id="ar-error-message" class="ar-error-message" hidden></p>
+      <p class="ar-note">
+        ב-AR (Quick Look ב-iPhone/iPad, Scene Viewer ב-Android) אין הדגשה אינטראקטיבית —
+        זו זמינה רק בתצוגה למעלה. לאחר "הצג ב-AR" יש למקם את המולקולה ידנית על משטח.
+      </p>
+    </section>
+
+    <section class="chain-view">
+      <h2>הרצף (N → C)</h2>
+      <div class="chain-wrapper">
+        <span class="terminus" dir="ltr">N</span>
+        <div id="chain" class="chain"></div>
+        <span class="terminus" dir="ltr">C</span>
+      </div>
+      <div class="text-sequence" id="text-sequence" role="list" aria-label="רצף החומצות, לחיצה לבחירה">(אין עדיין רצף)</div>
+      <p id="molecule-caption" class="molecule-caption"></p>
+    </section>
+
+    <section class="counts">
+      <div class="count-box">
+        <span class="count-value" id="count-length">0</span>
+        <span class="count-label">חומצות אמינו ברצף</span>
+      </div>
+      <div class="count-box">
+        <span class="count-value" id="count-bonds">0</span>
+        <span class="count-label">קשרים פפטידיים</span>
+      </div>
+      <div class="count-box">
+        <span class="count-value" id="count-water">0</span>
+        <span class="count-label">מולקולות מים שנפלטו</span>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button type="button" id="btn-undo" onclick="undoLast()" disabled>↩ ביטול הפעולה האחרונה</button>
+      <button type="button" id="btn-reset" onclick="resetSequence()" disabled>⟲ איפוס הרצף</button>
+      <button type="button" id="btn-finish" class="primary" onclick="handleFinishClick()" disabled>המשך לצפייה ב-AR</button>
+      <p id="btn-finish-note" class="btn-finish-note" hidden></p>
+    </section>
+
+    <section id="fasta-section" class="fasta-section" hidden>
+      <h2>פלט FASTA</h2>
+      <textarea id="fasta-output" readonly rows="3" dir="ltr"></textarea>
+    </section>
+
+    <p class="footer-note">שלב פיתוח: אב-טיפוס מקומי בלבד. AR זמין רק לחומצת אמינו בודדת. ללא AlphaFold, ללא פרסום.</p>
+  </div>
+
+</div>
+
+<script src="vendor/3dmol-min.js"></script>
+<!-- type="module": vendor/model-viewer.min.js הוא build מסוג ES module
+     (מסתיים ב-export{...} אמיתי) — כ-<script> רגיל זו שגיאת תחביר
+     (SyntaxError: "Unexpected token 'export'") שמונעת את כל הקובץ
+     מלרוץ בשקט, כולל customElements.define("model-viewer", ...) עצמו.
+     אין כאן ייבוא/שימוש בשמות המיוצאים (ModelViewerElement וכו') — רק
+     ברכיב ה-HTML <model-viewer> עצמו, שנרשם כתופעת-לוואי גלובלית
+     (customElements.define) בלי קשר לסקופ המודול — לכן type="module"
+     מספיק, בלי לשנות שום קוד אחר. תוקן אחרי שהתגלה בפועל בהרצת הדף
+     בדפדפן אמיתי (Playwright), לא ב-curl. -->
+<script type="module" src="vendor/model-viewer.min.js"></script>
+<script src="peptide-geometry.js"></script>
+<script src="cpk-colors-data.js"></script>
+<script src="amino-acids-data.js"></script>
+<script src="ar-sequences-data.js"></script>
+<script src="sequence-storage.js"></script>
+<script src="molecule-viewer.js"></script>
+<script src="ar-viewer.js"></script>
+<script src="mesh-builder.js"></script>
+<script src="webxr-ar.js"></script>
+<script src="app.js"></script>
+<script src="qr-scanner.js"></script>
+</body>
+</html>

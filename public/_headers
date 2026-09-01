@@ -1,0 +1,16 @@
+# קובץ תצורת Netlify (לא חלק מהאפליקציה עצמה) — Content-Type ו-CORS
+# נכונים לקובצי המודלים של פרויקט המולקולות (public/molecules/). הנתיב
+# מוכפל בכוונה (/molecules/molecules/*) — עמוד המולקולות עצמו יושב תחת
+# /molecules/, וקובצי ה-GLB/USDZ שלו יושבים בתת-תיקייה molecules/ שלו,
+# בדיוק כמו במקור. Access-Control-Allow-Origin נדרש כדי ש-model-viewer/
+# Scene Viewer/Quick Look יוכלו לטעון את הקובץ גם מקונטקסט שונה מהדף.
+# תיעוד: https://docs.netlify.com/routing/headers/
+# הערה חשובה: תבניות ב-_headers לא חוצות תיקיות (/*.usdz לא תואם
+# /molecules/molecules/glycine.usdz) — לכן חייבים לציין את הנתיב המלא.
+/molecules/molecules/*.glb
+  Content-Type: model/gltf-binary
+  Access-Control-Allow-Origin: *
+
+/molecules/molecules/*.usdz
+  Content-Type: model/vnd.usdz+zip
+  Access-Control-Allow-Origin: *

@@ -5,6 +5,10 @@ import { Menu, X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 const isHome = () => window.location.pathname === '/';
 
+// activeWhen: פונקציה אופציונלית שמחליטה אם הפריט "פעיל" (הנתיב הנוכחי
+// תואם לו) — משמשת כרגע רק לפריט "מולקולות ו-AR", שנפתח כעמוד עליון
+// עצמאי (public/molecules/, לא route של React Router) ולכן חייב סימון
+// מפורש לפי window.location.pathname, לא לפי match פנימי של הראוטר.
 const navLinks = [
   { label: 'דף הבית', href: '/' },
   { label: 'אודות', anchor: 'about' },
@@ -12,6 +16,7 @@ const navLinks = [
   { label: 'מגזין', href: '/blog' },
   { label: 'קהילת מורים', href: '/community' },
   { label: 'חומרי עזר', href: '/resources' },
+  { label: 'מולקולות ו-AR', href: '/molecules/', activeWhen: (path) => path.startsWith('/molecules/') },
   { label: 'צור קשר', anchor: 'footer' },
   { label: 'ממליצים עלינו', anchor: 'testimonials' },
 ];
@@ -54,19 +59,23 @@ export default function Navbar() {
               className="flex items-center gap-x-6"
               aria-label="ניווט ראשי"
             >
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={getHref(link)}
-                  {...(link.external
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {})}
-                  className="text-sm xl:text-base font-semibold text-foreground/80 hover:text-primary transition-colors relative group whitespace-nowrap"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-1 right-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300" />
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = link.activeWhen ? link.activeWhen(window.location.pathname) : false;
+                return (
+                  <a
+                    key={link.label}
+                    href={getHref(link)}
+                    {...(link.external
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                    {...(link.activeWhen ? { 'aria-label': link.label, 'aria-current': isActive ? 'page' : undefined } : {})}
+                    className={`text-sm xl:text-base font-semibold transition-colors relative group whitespace-nowrap ${isActive ? 'text-primary' : 'text-foreground/80 hover:text-primary'}`}
+                  >
+                    {link.label}
+                    <span className={`absolute -bottom-1 right-0 h-0.5 bg-secondary transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                  </a>
+                );
+              })}
             </nav>
             <div className="flex items-center gap-3 ms-6 ps-6 border-s border-border/40 shrink-0">
               {user ? (
@@ -126,29 +135,33 @@ export default function Navbar() {
             className="lg:hidden bg-background border-t border-border"
           >
             <div className="px-4 py-4 space-y-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={getHref(link)}
-                  {...(link.external
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {})}
-                  className="block py-3 text-lg font-medium text-foreground/80 hover:text-primary active:text-primary transition-colors touch-manipulation"
-                  onClick={(e) => {
-                    setMobileOpen(false);
-                    if (link.external) return;
-                    if (link.anchor) {
-                      e.preventDefault();
-                      setTimeout(() => {
-                        const el = document.getElementById(link.anchor);
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }, 300);
-                    }
-                  }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = link.activeWhen ? link.activeWhen(window.location.pathname) : false;
+                return (
+                  <a
+                    key={link.label}
+                    href={getHref(link)}
+                    {...(link.external
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                    {...(link.activeWhen ? { 'aria-label': link.label, 'aria-current': isActive ? 'page' : undefined } : {})}
+                    className={`block py-3 text-lg font-medium transition-colors touch-manipulation ${isActive ? 'text-primary font-bold' : 'text-foreground/80 hover:text-primary active:text-primary'}`}
+                    onClick={(e) => {
+                      setMobileOpen(false);
+                      if (link.external) return;
+                      if (link.anchor) {
+                        e.preventDefault();
+                        setTimeout(() => {
+                          const el = document.getElementById(link.anchor);
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 300);
+                      }
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
               <div className="border-t border-border/40 pt-3 mt-3 space-y-1">
                 {user ? (
                   <>

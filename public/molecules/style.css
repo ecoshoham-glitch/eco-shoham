@@ -1,0 +1,1389 @@
+:root {
+  --color-bg: #eef1f6;
+  --color-surface: #ffffff;
+  --color-text: #1c1e27;
+  --color-muted: #565e6d;
+  --color-border: #dde1ea;
+  --color-primary: #2563eb;
+  --color-primary-text: #ffffff;
+  --color-r-group: #c026d3;
+  --radius-card: 14px;
+  --shadow-card: 0 2px 10px rgba(20, 25, 40, 0.08);
+
+  --color-gly: #2563eb;
+  --color-ala: #16a34a;
+  --color-ser: #b45309;
+  --color-phe: #7c3aed; /* פנילאלנין: זמינה כרגע רק דרך בחירה אוטומטית מ-URL (?aa=phe), אין עדיין כפתור ידני */
+  --banner-height: 34px; /* כותרת שם הרצף, קבועה בראש העמוד */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* תיקון-על אחרי דיווח בפועל: כפתורי AR של אנדרואיד ו-iPhone הוצגו יחד
+   על אותו מכשיר אמיתי (אייפון+Chrome). הסיבה המדויקת שאותרה: שלושה
+   סלקטורים במקומות אחרים בקובץ הזה (#qr-android-ar-block, .qr-ar-button,
+   .qr-update-links) קבעו display:flex בלי כלל [hidden] מפורש משלהם —
+   #qr-android-ar-block הוא סלקטור ID, שסגוליותו גבוהה מ-[hidden] תמיד
+   (לא רק תיקו); .qr-ar-button/.qr-update-links הם קלאסים, שם זה תיקו-
+   סגוליות עם [hidden] שנשבר לפי סדר-מקור לטובת כלל המחבר. בשני המקרים
+   ה-display המפורש ניצח, כך שהגדרת element.hidden=true ב-JS (אחרי זיהוי
+   פלטפורמה מדויק לגמרי ב-enterQrArLanding) לא השפיעה חזותית בכלל —
+   האלמנטים נשארו גלויים, בלי קשר לתוצאת isIOS()/isAndroid().
+   הכלל הגורף הבא הוא ה-backstop: !important מנצח בלי קשר לסגוליות/סדר-
+   מקור, ולכן פותר את זה סופית ומונע הישנות של אותה טעות בכל אלמנט hidden
+   עתידי בעמוד — לא רק בשלושת הסלקטורים שאותרו הפעם. */
+[hidden] {
+  display: none !important;
+}
+
+/* הגנת-על נוספת, ברמת הפלטפורמה — לא מסתמכת אך ורק על hidden בכלל.
+   בדיוק מחלקה אחת מתוך platform-ios/platform-android/platform-other
+   נקבעת על <html> ע"י setPlatformClass() (ar-viewer.js), מוקדם ככל
+   האפשר אחרי DOMContentLoaded וגם מחדש ב-pageshow (כדי לשרוד חזרה
+   מ-Quick Look/Scene Viewer וגם bfcache). אלמנטים שנוגעים ל-AR של
+   פלטפורמה ספציפית מסומנים גם במחלקת ios-only/android-only, בנוסף
+   ל-hidden/id שלהם — כפל-ביטחון: גם [hidden] וגם המחלקה הזו צריכים
+   "להסכים" שהאלמנט מוצג, כך שבאג עתידי באחד מהם לא מספיק כדי לגרום
+   לכפתור AR של פלטפורמה לא-רלוונטית להופיע. */
+.platform-ios .android-only {
+  display: none !important;
+}
+.platform-android .ios-only {
+  display: none !important;
+}
+.platform-other .ios-only,
+.platform-other .android-only {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  direction: rtl;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* אין גלילה אופקית לעולם */
+}
+
+body {
+  width: 100vw;
+  height: 100dvh;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* נגישות: focus ברור לכל אלמנט בר-מיקוד, בכל מקום באפליקציה */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+/* ==================== כותרת שם הרצף (קבועה בראש העמוד) ==================== */
+.sequence-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--banner-height);
+  z-index: 300; /* מעל גם מסך הנחיתה מ-QR (z-index:100) וגם app-shell */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  direction: ltr; /* קודי שלוש-אותיות באנגלית בלבד */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sequence-banner-name:empty::before {
+  content: '—';
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.sequence-banner-subtitle {
+  font-weight: 400;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+}
+
+/* מתחת לכותרת הקבועה (position:fixed), מעל מסך הנחיתה (z-index:100)
+   וגם מעל app-shell — יכולה להיווצר משתי הפעולות (הכפתורים הרגילים
+   וגם סריקת QR/?aa=), ראו addAminoAcid ב-app.js. */
+.sequence-limit-message {
+  position: fixed;
+  top: var(--banner-height);
+  left: 0;
+  right: 0;
+  z-index: 250;
+  margin: 0;
+  padding: 8px 12px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ==================== מסגרת האפליקציה (מסך מלא, מתחת לכותרת הרצף) ==================== */
+.app-shell {
+  display: grid;
+  width: 100vw;
+  height: calc(100dvh - var(--banner-height));
+  margin-top: var(--banner-height);
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 42dvh; /* מובייל: המציג גדול, מגירה תחתונה גוללת בנפרד */
+  overflow: hidden;
+}
+
+/* חובה: ל-.app-shell יש display:grid באותה סגוליות בדיוק כמו הכלל
+   המובנה [hidden]{display:none} של הדפדפן — בלי הכלל המפורש הזה,
+   הגדרת התכונה hidden (למשל בכניסה ממסך הנחיתה מ-QR) לא הייתה מסתירה
+   אותו בפועל ויזואלית, למרות ש-.hidden ב-JS מדווח true. */
+.app-shell[hidden] {
+  display: none;
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    grid-template-columns: 1fr 320px; /* דסקטופ: סרגל צד צר, המציג ממלא את היתר */
+    grid-template-rows: 1fr;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* טלפון לרוחב: מגירה תחתונה נמוכה יותר כדי לא לגזול את רוב הגובה מהמולקולה */
+  .app-shell {
+    grid-template-rows: 1fr 34dvh;
+  }
+}
+
+/* ==================== אזור המולקולה ==================== */
+.viewer-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #fbfcfe;
+}
+
+.molecule-viewer {
+  position: absolute;
+  inset: 0;
+  touch-action: none; /* מאפשר גרירה/צביטה בתוך המציג במקום גלילת העמוד */
+}
+
+.viewer-messages {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  right: 8px;
+  left: 8px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.viewer-messages > * {
+  pointer-events: auto;
+}
+
+.chemistry-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.85rem;
+  white-space: pre-line;
+  line-height: 1.5;
+  box-shadow: var(--shadow-card);
+}
+
+.peptide-disclaimer {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.75rem;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+/* כרטיס מידע מאוחד */
+.info-card {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  right: 8px;
+  left: 8px;
+  z-index: 7;
+  max-width: 340px;
+  margin-inline-start: auto; /* בדסקטופ: נצמד לפינה, לא נמתח על כל הרוחב */
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  padding: 12px 14px;
+}
+
+@media (min-width: 860px) {
+  .info-card {
+    top: 12px;
+    right: 12px;
+    left: auto;
+  }
+}
+
+.info-card-close {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.info-card-close:hover {
+  background: var(--color-bg);
+}
+
+.info-card-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-inline-end: 30px;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.info-card-en {
+  color: var(--color-muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.info-card-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.info-card-key {
+  color: var(--color-muted);
+}
+
+.info-card-terminus {
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* סרגל כלים אחד מאוחד */
+.toolbar {
+  position: absolute;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  right: 8px;
+  left: 8px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-card);
+  padding: 6px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(3px);
+}
+
+@media (min-width: 860px) {
+  .toolbar {
+    right: 12px;
+    left: auto;
+    bottom: 12px;
+    max-width: 320px;
+  }
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+  padding-inline-end: 6px;
+  border-inline-end: 1px solid var(--color-border);
+}
+.toolbar-group:last-child {
+  border-inline-end: none;
+  padding-inline-end: 0;
+}
+
+.tb-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 1.1rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--color-text);
+}
+.tb-btn:active {
+  background: var(--color-bg);
+}
+.tb-btn[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.tb-slider {
+  width: 90px;
+  min-height: 44px;
+}
+
+.viewer-toggles {
+  position: absolute;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  box-shadow: var(--shadow-card);
+}
+
+.toggle-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  min-height: 24px;
+}
+
+.toggle-item input {
+  width: 18px;
+  height: 18px;
+}
+
+/* כפתור מקרא + חלונית */
+.legend-button {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  left: 8px;
+  z-index: 6;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 22px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+
+.legend-panel {
+  position: absolute;
+  top: calc(56px + env(safe-area-inset-top, 0px));
+  left: 8px;
+  right: 8px;
+  z-index: 8;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: 60%;
+  overflow-y: auto;
+  font-size: 0.78rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: 10px 14px 14px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+}
+
+.legend-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.legend-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.legend-section {
+  margin: 6px 0 8px;
+}
+
+.legend-section h3 {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  flex: none;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  flex: none;
+  border-radius: 3px;
+}
+.legend-swatch-box { border: 2px solid var(--color-r-group); background: transparent; }
+.legend-swatch-halo { background: rgba(0, 191, 255, 0.35); border: 1px solid deepskyblue; }
+.legend-swatch-bond { background: royalblue; height: 4px; margin-top: 4px; }
+.legend-swatch-arrow { background: #444; height: 3px; margin-top: 4px; }
+.legend-swatch-ca { background: #909090; border-radius: 50%; width: 12px; height: 12px; }
+
+.legend-note {
+  margin: 4px 0 0;
+  font-size: 0.68rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* ==================== פאנל הבקרה (מגירה תחתונה במובייל / סרגל צד בדסקטופ) ==================== */
+.control-pane {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 860px) {
+  .control-pane {
+    border-top: none;
+    border-right: 1px solid var(--color-border);
+  }
+}
+
+.app-header {
+  text-align: center;
+  padding: 2px 0 0;
+}
+
+.app-header h1 {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.stage-indicator {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stage-item {
+  flex: 1;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 6px 4px;
+  font-size: 0.68rem;
+  color: var(--color-muted);
+}
+
+.control-pane section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 12px 14px;
+}
+
+.control-pane section h2 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+/* כפתורי בחירת חומצה */
+.scan-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.scan-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 3px solid transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.scan-btn[aria-pressed="true"] {
+  border-color: var(--color-text);
+}
+.scan-btn[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-text);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-btn-code {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.scan-btn-name {
+  font-size: 0.78rem;
+}
+
+.scan-gly { background: var(--color-gly); }
+.scan-ala { background: var(--color-ala); }
+.scan-ser { background: var(--color-ser); }
+
+/* שרשרת (תצוגה סכמטית) */
+.chain-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 2px 10px;
+}
+
+.terminus {
+  font-weight: 700;
+  color: var(--color-muted);
+  flex: none;
+}
+
+.chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-height: 40px;
+}
+
+.bead {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  direction: ltr;
+  font-size: 0.7rem;
+}
+
+.bead-gly { background: var(--color-gly); }
+.bead-ala { background: var(--color-ala); }
+.bead-ser { background: var(--color-ser); }
+.bead-phe { background: var(--color-phe); }
+
+.bond {
+  flex: none;
+  width: 14px;
+  height: 3px;
+  background: var(--color-border);
+}
+
+/* רצף בקודי שלוש-אותיות, לחיץ, N->C */
+.text-sequence {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.seq-chip {
+  flex: none;
+  min-height: 32px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  direction: ltr;
+}
+.seq-chip.selected {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+  font-weight: 700;
+}
+
+.seq-arrow {
+  flex: none;
+  color: var(--color-muted);
+}
+
+.molecule-caption {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-border);
+  font-size: 0.76rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+.molecule-caption:empty {
+  display: none;
+}
+
+.molecule-caption a {
+  color: var(--color-primary);
+}
+
+/* ספירות */
+.counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  text-align: center;
+  padding: 10px !important;
+}
+
+.count-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.count-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.count-label {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+/* כפתורי בקרה */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.controls button {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.controls button.primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.btn-finish-note {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* AR חוצה-פלטפורמות (model-viewer) */
+.ar-model-viewer {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  display: block;
+}
+
+.ar-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.ar-ready-message,
+.ar-missing-message,
+.ar-fallback-message,
+.ar-error-message {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.ar-ready-message {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.ar-missing-message {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.ar-fallback-message {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.ar-error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.ar-note {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+/* ==================== מסך פתיחה ייעודי מסריקת QR (?aa=) ==================== */
+/* חובה: [hidden] ו-.qr-landing{display:flex} הם באותה סגוליות בדיוק;
+   בלי הכלל הבא, המסך היה גלוי תמיד (גם בכניסה רגילה בלי ?aa=), כי כלל
+   ה-display המפורש של המחבר מנצח את [hidden] המובנה של הדפדפן בתיקו. */
+#qr-landing[hidden] {
+  display: none;
+}
+
+.qr-landing {
+  position: fixed;
+  top: var(--banner-height); /* לא מכסה את כותרת שם הרצף הקבועה */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--color-bg);
+  overflow-y: auto;
+}
+
+.qr-landing-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.qr-landing-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.qr-landing-en {
+  color: var(--color-muted);
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+.qr-landing-three {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.qr-landing-preview-slot {
+  width: min(70vw, 260px);
+  height: min(70vw, 260px);
+  margin: 4px 0 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* model-viewer עצמו מועבר (reparent) לתוך המשבצת הזו במצב נחיתה בלבד —
+   ממלא אותה לגמרי, במקום גובה 150px הקבוע שלו בסיידבר הרגיל. */
+.qr-landing-preview-slot .ar-model-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+.qr-ar-button {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 14px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  /* גם button וגם a.qr-ar-button (קישור rel="ar" ל-iOS) — מרכוז טקסט
+     ואיפוס עיצוב קישור ברירת מחדל, כדי ששניהם ייראו זהים לחלוטין. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.qr-ar-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#qr-android-ar-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-ar-button-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  min-height: 48px;
+  font-size: 0.9rem;
+}
+
+.qr-compat-message {
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  direction: ltr;
+  text-align: left;
+}
+
+.qr-update-links {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.qr-update-links a {
+  color: var(--color-primary);
+}
+
+.qr-comparison-block {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px dashed var(--color-border);
+  font-size: 0.76rem;
+}
+.qr-comparison-label {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.qr-comparison-link {
+  display: block;
+  margin: 4px 0;
+  color: var(--color-primary);
+}
+.qr-comparison-note {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.qr-webxr-status {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* AR חי (webxr-ar.js): הקנבס הוא ה-XRWebGLLayer בפועל — הדפדפן משתלט על
+   הצגתו בזמן session (מסך מלא), ה-CSS כאן רלוונטי רק כברירת מחדל לפני/
+   אחרי session (מוסתר לגמרי דרך [hidden]). שכבת ה-DOM Overlay צפה מעל
+   התמונה החיה של המצלמה בזמן session — ולכן חייבת להיות שקופה ברובה,
+   עם הכפתורים עצמם בלבד גלויים. */
+.webxr-ar-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 900;
+}
+/* חובה (ראו הסבר דומה למעלה ליד #qr-landing[hidden]): [hidden] וכלל
+   display מפורש באותה סגוליות — בלי זה הקנבס/השכבה יישארו גלויים גם
+   כשה-attribute hidden מוגדר. */
+.webxr-ar-canvas[hidden] {
+  display: none;
+}
+
+/* בכוונה בלי [hidden]/display:none על השכבה הזו עצמה — ראו הערה ב-
+   index.html: מפרט ה-DOM Overlay דורש שה-root "יוצג בפועל" כבר בזמן
+   requestSession(). לכן ההסתרה בפועל (לפני/אחרי session) היא opacity+
+   pointer-events בלבד, דרך המחלקה webxr-ar-overlay--active שה-JS מוסיף
+   ומסיר (לא display). */
+.webxr-ar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 901;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none; /* מונע פאן/זום דפדפן בזמן גרירה-לסיבוב על כל המסך */
+}
+.webxr-ar-overlay.webxr-ar-overlay--active {
+  opacity: 1;
+}
+/* pointer-events:auto על כל השכבה (לא רק הכפתורים) — רק אחרי מיקום
+   בפועל (ראו JS: --placed מתווסף ב-select/בנפילה-חזרה ללא hit-test),
+   כדי לאפשר גרירה-לסיבוב בכל אזור המסך. לפני מיקום השכבה נשארת
+   pointer-events:none כדי שמגע-להצבה (tap-to-place, אירוע select של
+   WebXR עצמו, לא DOM) ימשיך ליפול דרכה כרגיל. */
+.webxr-ar-overlay.webxr-ar-overlay--placed {
+  pointer-events: auto;
+}
+
+.webxr-ar-hint {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(17, 17, 17, 0.72);
+  color: #fff;
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.webxr-ar-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  pointer-events: none; /* גלוי רק לוגית — קליטת מגע נפתחת רק ב-session פעיל, ראו למטה */
+}
+.webxr-ar-overlay--active .webxr-ar-controls {
+  pointer-events: auto;
+}
+
+.webxr-ar-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.webxr-ar-btn {
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  /* קריטי לכפתורי סיבוב (החזק-ללחיצה): בלי זה, הדפדפן במגע לפעמים
+     מפרש את ההחזקה כתחילת מחוות פאן/זום משלו ומבטל את הרצף עם
+     pointercancel כמעט מיד — התסמין המדויק שדווח ("לא ניתן לסובב"). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.webxr-ar-readout {
+  min-width: 64px;
+  text-align: center;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(17, 17, 17, 0.72);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.webxr-ar-label {
+  color: #fff;
+  background: rgba(17, 17, 17, 0.72);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.webxr-ar-select {
+  min-height: 40px;
+  border-radius: 8px;
+  border: none;
+  padding: 0 8px;
+}
+
+.webxr-ar-add-btn {
+  min-width: 64px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  touch-action: manipulation;
+}
+.webxr-ar-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.webxr-ar-exit {
+  border-radius: 12px;
+  min-width: 140px;
+  min-height: 44px;
+  font-size: 0.95rem;
+  background: rgba(220, 38, 38, 0.92);
+  color: #fff;
+}
+
+.ar-debug-panel {
+  position: fixed;
+  top: var(--banner-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 400;
+  background: #0b1220;
+  color: #d1fae5;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.ar-debug-panel[hidden] {
+  display: none;
+}
+.ar-debug-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+.ar-debug-close {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.qr-landing-hint {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.qr-landing-unsupported {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.qr-landing-continue {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* "המשך בניית השרשרת" — קבוע במסך הנחיתה עצמו, ראו הסבר מפורט ב-index.html
+   ליד המקור. */
+.qr-continue-chain {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-continue-chain-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.qr-continue-chain-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+/* ==================== סורק QR בתוך האתר (qr-scanner.js) ====================
+   z-index גבוה מכל שכבה אחרת בעמוד (כולל webxr-ar-overlay ב-900/901) —
+   מודאלי מלא-מסך, אמור לכסות כל מה שהיה גלוי כשנפתח. */
+.qr-scanner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: rgba(10, 12, 18, 0.94);
+  color: #fff;
+  text-align: center;
+}
+
+.qr-scanner-frame-wrap {
+  position: relative;
+  width: min(80vw, 320px);
+  height: min(80vw, 320px);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+.qr-scanner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-scanner-frame {
+  position: absolute;
+  inset: 12%;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.qr-scanner-hint {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.qr-scanner-error {
+  margin: 0;
+  max-width: 320px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #7f1d1d;
+  color: #fecaca;
+  font-size: 0.85rem;
+}
+
+.qr-scanner-native-fallback-hint {
+  margin: 0;
+  max-width: 320px;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+.ar-diag-log {
+  margin-top: 14px;
+  width: 100%;
+  max-height: 90px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #111827;
+  color: #86efac;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  text-align: left;
+  direction: ltr;
+}
+.ar-diag-log:empty {
+  display: none;
+}
+
+.fasta-section textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88rem;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  resize: vertical;
+}
+
+.footer-note {
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  margin: 0;
+  padding: 4px 0 2px;
+}
