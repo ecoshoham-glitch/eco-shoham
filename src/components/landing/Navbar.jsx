@@ -43,15 +43,31 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
-              <span className="text-primary-foreground font-black text-xs md:text-sm leading-none">3D</span>
-            </div>
-            <span className="text-2xl md:text-3xl font-black text-primary tracking-tight">
-              ECO<span className="text-secondary">Shoham</span>
-            </span>
-          </a>
+          {/* אשכול הלוגואים — ראשון בסדר ה-DOM, לכן בפינה הימנית (dir="rtl" +
+              justify-between). שני הלוגואים זה-לצד-זה בשורת flex עם gap,
+              לא ממוקמים absolute, כך שלעולם לא יכולים לחפוף לטקסט של זה —
+              רק לתפוס יותר/פחות רוחב אופקי. h-full + py-* (לא h-16/h-20
+              קבוע) מבטיח שהתמונה תמיד נשארת בתוך גבולות ה-navbar בפועל,
+              בכל גובה שורה (h-16 מובייל / h-20 דסקטופ). */}
+          <div className="flex items-center gap-2 md:gap-3 h-full py-2 md:py-2.5">
+            <a href="/" className="flex items-center gap-2 h-full">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
+                <span className="text-primary-foreground font-black text-xs md:text-sm leading-none">3D</span>
+              </div>
+              <span className="text-2xl md:text-3xl font-black text-primary tracking-tight">
+                ECO<span className="text-secondary">Shoham</span>
+              </span>
+            </a>
+
+            {/* FG-Flying Giraph — לוגו נוסף, ליד ה-ECOShoham, לא במקום. */}
+            <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
+              <img
+                src="/images/לוגו מעודכן.png"
+                alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
+                className="h-full w-auto object-contain"
+              />
+            </a>
+          </div>
 
           {/* Desktop Nav — מרווח אופקי אחיד בין טאבים */}
           <div className="hidden lg:flex items-center min-w-0 shrink mr-8 xl:mr-10">
@@ -122,18 +138,6 @@ export default function Navbar() {
           >
             {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
-
-          {/* FG-Flying Giraph — לוגו נוסף. עוגן כאיבר-flex אחרון בשורה
-              (dir="rtl" + justify-between הופכים את הראשון/אחרון ל-ימין/
-              שמאל בהתאמה), כדי שיישאר בפינה השמאלית-העליונה בכל העמודים
-              (Navbar משותף) ובכל רוחב מסך — לא רק כשתפריט הנייד מוסתר. */}
-          <a href="/" className="flex items-center flex-shrink-0" aria-label="FG-Flying Giraph">
-            <img
-              src="/images/לוגו מעודכן.png"
-              alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
-              className="h-10 md:h-14 w-auto"
-            />
-          </a>
         </div>
       </div>
 
