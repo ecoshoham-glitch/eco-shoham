@@ -44,12 +44,23 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* אשכול הלוגואים — ראשון בסדר ה-DOM, לכן בפינה הימנית (dir="rtl" +
-              justify-between). שני הלוגואים זה-לצד-זה בשורת flex עם gap,
-              לא ממוקמים absolute, כך שלעולם לא יכולים לחפוף לטקסט של זה —
-              רק לתפוס יותר/פחות רוחב אופקי. h-full + py-* (לא h-16/h-20
-              קבוע) מבטיח שהתמונה תמיד נשארת בתוך גבולות ה-navbar בפועל,
-              בכל גובה שורה (h-16 מובייל / h-20 דסקטופ). */}
-          <div className="flex items-center gap-2 md:gap-3 h-full py-2 md:py-2.5">
+              justify-between). מימין לשמאל: לוגו FG-Flying Giraph, מרווח
+              קבוע של 0.5 ס"מ (gap-[0.5cm], יחידת cm אמיתית ב-CSS — לא
+              קירוב ב-px), ואז תג "3D" + טקסט ECOShoham. h-full לאורך כל
+              השרשרת (wrapper -> a -> img), בלי padding אנכי בשום שלב,
+              כדי שהתמונה תמלא בדיוק את גובה ה-navbar (h-16 מובייל / h-20
+              דסקטופ) — לא פחות, ולא יכולה לחרוג ממנו (מוגבלת מתמטית ע"י
+              h-full על ההורה, לא ניחוש גובה קבוע). */}
+          <div className="flex items-center gap-[0.5cm] h-full">
+            {/* FG-Flying Giraph */}
+            <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
+              <img
+                src="/images/לוגו מעודכן.png"
+                alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
+                className="h-full w-auto object-contain"
+              />
+            </a>
+
             <a href="/" className="flex items-center gap-2 h-full">
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
                 <span className="text-primary-foreground font-black text-xs md:text-sm leading-none">3D</span>
@@ -58,21 +69,12 @@ export default function Navbar() {
                 ECO<span className="text-secondary">Shoham</span>
               </span>
             </a>
-
-            {/* FG-Flying Giraph — לוגו נוסף, ליד ה-ECOShoham, לא במקום. */}
-            <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
-              <img
-                src="/images/לוגו מעודכן.png"
-                alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
-                className="h-full w-auto object-contain"
-              />
-            </a>
           </div>
 
           {/* Desktop Nav — מרווח אופקי אחיד בין טאבים */}
           <div className="hidden lg:flex items-center min-w-0 shrink mr-8 xl:mr-10">
             <nav
-              className="flex items-center gap-x-6"
+              className="flex items-center gap-x-3"
               aria-label="ניווט ראשי"
             >
               {navLinks.map((link) => {
