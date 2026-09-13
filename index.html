@@ -10,12 +10,43 @@
          האמיתי של Netlify בפרודקשן כן תומך בזה. הפניה בצד-לקוח כאן, ממש
          בתחילת <head> (לפני כל טעינת משאב אחרת, כולל הפונטים למטה), היא
          המנגנון האמין-לוודאות בכל סביבה, כולל זו שכבר נבדקה בפועל.
+
+         רשימת החומצות/הרצפים החוקיים מועתקת ביד מ-
+         public/molecules/amino-acids-data.js (AMINO_ACID_URL_CODES) ומ-
+         public/molecules/ar-sequences-data.js (מפתחות AR_SEQUENCES) —
+         לא ייבוא, כי זהו סקריפט סינכרוני קטן שרץ לפני שכל שאר האתר נטען
+         בכלל, ולא כדאי להפוך אותו לתלוי במודול חיצוני. אם רשימת החומצות/
+         הרצפים הנתמכים באפליקציית המולקולות משתנה, יש לעדכן גם כאן.
+         מקבלים רק ערך aa/sequence שתואם בדיוק לרשימה — לא מעבירים קלט
+         שרירותי הלאה (למשל aa=<script> וכו') וגם לא מפנים כלל אם הערך
+         לא מוכר, כדי לא "לבלוע" קישור שגוי בלי שום משוב.
+
+         location.pathname.indexOf('/molecules/') !== 0: הגנה מפורשת נגד
+         לולאת הפניות — גם אם בעתיד ה-routing בין index.html הראשי לזה
+         של public/molecules/index.html ישתנה ושני הדפים ישתפו את אותו
+         index.html בפועל, הבדיקה הזו עדיין תמנע הפניה כשכבר נמצאים תחת
+         /molecules/. כרגע זה תמיד false מבנית (שני קבצי HTML נפרדים
+         לגמרי לפי public/_redirects), אבל זו הגנה זולה ולא תלויה בהנחה
+         הזו שממשיכה להתקיים.
+
          location.replace (לא href) כדי שלא תיווצר רשומת history מיותרת
          בין הכתובת הישנה לחדשה. -->
     <script>
       (function () {
+        if (window.location.pathname.indexOf('/molecules/') === 0) return;
+
+        var VALID_AA = ['gly', 'ala', 'ser', 'phe'];
+        var VALID_SEQUENCES = ['gly-gly', 'gly-ala', 'gly-ala-ser'];
+
         var params = new URLSearchParams(window.location.search);
-        if (params.has('aa') || params.has('sequence')) {
+        var aa = params.get('aa');
+        var sequence = params.get('sequence');
+        var aaValid = aa !== null && VALID_AA.indexOf(aa.trim().toLowerCase()) !== -1;
+        var sequenceValid = sequence !== null && VALID_SEQUENCES.indexOf(sequence.trim().toLowerCase()) !== -1;
+
+        if (aaValid || sequenceValid) {
+          // כל שאר הפרמטרים בכתובת (אם יש) מועברים בשלמותם -- לא בונים
+          // query string חדש מאפס, רק מוסיפים את נתיב היעד לפני מה שכבר קיים.
           window.location.replace('/molecules/' + window.location.search);
         }
       })();
