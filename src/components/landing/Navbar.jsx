@@ -58,7 +58,7 @@ export default function Navbar() {
         <div className="hidden xl:flex items-center justify-between h-20">
           <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
             <img
-              src="/images/לוגו מעודכן copy.png"
+              src="/images/לוגו מעודכן שקוף חתוך.png"
               alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
               className="h-full w-auto object-contain"
             />
@@ -134,7 +134,7 @@ export default function Navbar() {
           <div className="flex items-center gap-[0.5cm] h-full">
             <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
               <img
-                src="/images/לוגו מעודכן copy.png"
+                src="/images/לוגו מעודכן שקוף חתוך.png"
                 alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
                 className="h-full w-auto object-contain"
               />
