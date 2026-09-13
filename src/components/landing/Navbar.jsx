@@ -41,7 +41,11 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background shadow-md shadow-primary/10`}
       dir="rtl"
     >
-      <div className="max-w-7xl mx-auto pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
+      {/* בלי max-w-7xl: התוכן חייב להתפרש על כל רוחב ה-navbar בפועל (בלי
+          תקרה מלאכותית), אחרת justify-between מפזר את המרווחים רק בתוך
+          1280px ממורכזים, לא ברוחב המסך האמיתי — בדיוק מה שגרם למרווחים
+          הזעירים (4-5px) שהתגלו קודם, גם במסכים רחבים בהרבה. */}
+      <div className="w-full pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
         {/* שורת דסקטופ: כל "הכפתורים" (שני הלוגואים + כל קישורי הניווט +
             כניסה/מנהל + "גלו את הערכות") הם אחים ישירים תחת flex יחיד עם
             justify-between — לא מקוננים בקבוצות עם gap-x/gap-3 נפרדים
