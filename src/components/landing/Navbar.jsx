@@ -122,6 +122,18 @@ export default function Navbar() {
           >
             {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
+
+          {/* FG-Flying Giraph — לוגו נוסף. עוגן כאיבר-flex אחרון בשורה
+              (dir="rtl" + justify-between הופכים את הראשון/אחרון ל-ימין/
+              שמאל בהתאמה), כדי שיישאר בפינה השמאלית-העליונה בכל העמודים
+              (Navbar משותף) ובכל רוחב מסך — לא רק כשתפריט הנייד מוסתר. */}
+          <a href="/" className="flex items-center flex-shrink-0" aria-label="FG-Flying Giraph">
+            <img
+              src="/images/לוגו מעודכן.png"
+              alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
+              className="h-10 md:h-14 w-auto"
+            />
+          </a>
         </div>
       </div>
 

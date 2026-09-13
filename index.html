@@ -2,6 +2,24 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <!-- קודי ה-QR הפיזיים הקיימים (מודפסים, אי אפשר להחליף) מצביעים לשורש
+         הדומיין עם ?aa=xxx/?sequence=xxx — מהתקופה שבה אפליקציית המולקולות
+         ישבה בשורש עצמו, לא ב-/molecules/. יש כלל מקביל ב-public/_redirects
+         (query-based), אבל אימות מקומי (netlify-cli dev --dir) הראה שהשרת
+         הסטטי הפשוט שם לא מיישם התאמות query — לא ניתן לאמת מקומית שה-Edge
+         האמיתי של Netlify בפרודקשן כן תומך בזה. הפניה בצד-לקוח כאן, ממש
+         בתחילת <head> (לפני כל טעינת משאב אחרת, כולל הפונטים למטה), היא
+         המנגנון האמין-לוודאות בכל סביבה, כולל זו שכבר נבדקה בפועל.
+         location.replace (לא href) כדי שלא תיווצר רשומת history מיותרת
+         בין הכתובת הישנה לחדשה. -->
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        if (params.has('aa') || params.has('sequence')) {
+          window.location.replace('/molecules/' + window.location.search);
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ECOShoham - ערכות למידה תלת-מימדיות</title>
