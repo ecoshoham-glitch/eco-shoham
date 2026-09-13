@@ -42,17 +42,92 @@ export default function Navbar() {
       dir="rtl"
     >
       <div className="max-w-7xl mx-auto pe-[1cm] ps-4 sm:ps-6 lg:ps-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* אשכול הלוגואים — ראשון בסדר ה-DOM, לכן בפינה הימנית (dir="rtl" +
-              justify-between). מימין לשמאל: לוגו FG-Flying Giraph, מרווח
-              קבוע של 0.5 ס"מ (gap-[0.5cm], יחידת cm אמיתית ב-CSS — לא
-              קירוב ב-px), ואז תג "3D" + טקסט ECOShoham. h-full לאורך כל
-              השרשרת (wrapper -> a -> img), בלי padding אנכי בשום שלב,
-              כדי שהתמונה תמלא בדיוק את גובה ה-navbar (h-16 מובייל / h-20
-              דסקטופ) — לא פחות, ולא יכולה לחרוג ממנו (מוגבלת מתמטית ע"י
-              h-full על ההורה, לא ניחוש גובה קבוע). */}
+        {/* שורת דסקטופ: כל "הכפתורים" (שני הלוגואים + כל קישורי הניווט +
+            כניסה/מנהל + "גלו את הערכות") הם אחים ישירים תחת flex יחיד עם
+            justify-between — לא מקוננים בקבוצות עם gap-x/gap-3 נפרדים
+            כמו קודם. justify-between על רשימה שטוחה כזו מבטיח: הפריט
+            הראשון (הלוגו) בדיוק בקצה הימני, האחרון (CTA) בדיוק בקצה
+            השמאלי, וכל המרווחים ביניהם שווים באמת — לא רק "נראים דומה".
+            נפרדת לגמרי משורת המובייל למטה (לא אותם אלמנטים, לא שיתוף
+            state) כי "מרווח שווה בין כל כפתור" לא רלוונטי במובייל, ששם
+            מוצגים רק שני הלוגואים + כפתור ההמבורגר. */}
+        <div className="hidden xl:flex items-center justify-between h-20">
+          <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
+            <img
+              src="/images/לוגו מעודכן.png"
+              alt="FG-Flying Giraph — בונים חוויה, עפים על הלמידה"
+              className="h-full w-auto object-contain"
+            />
+          </a>
+
+          <a href="/" className="flex items-center gap-2 h-full flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
+              <span className="text-primary-foreground font-black text-sm leading-none">3D</span>
+            </div>
+            <span className="text-3xl font-black text-primary tracking-tight">
+              ECO<span className="text-secondary">Shoham</span>
+            </span>
+          </a>
+
+          {navLinks.map((link) => {
+            const isActive = link.activeWhen ? link.activeWhen(window.location.pathname) : false;
+            return (
+              <a
+                key={link.label}
+                href={getHref(link)}
+                {...(link.external
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+                {...(link.activeWhen ? { 'aria-label': link.label, 'aria-current': isActive ? 'page' : undefined } : {})}
+                className={`text-sm xl:text-base font-semibold transition-colors relative group whitespace-nowrap flex-shrink-0 ${isActive ? 'text-primary' : 'text-foreground/80 hover:text-primary'}`}
+              >
+                {link.label}
+                <span className={`absolute -bottom-1 right-0 h-0.5 bg-secondary transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+              </a>
+            );
+          })}
+
+          {user ? (
+            <>
+              <a
+                href="/admin"
+                className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors border border-border/50 px-3 py-1.5 rounded-full hover:border-primary/30 whitespace-nowrap flex-shrink-0"
+              >
+                🔐 מנהל
+              </a>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap flex-shrink-0"
+              >
+                התנתק
+              </button>
+            </>
+          ) : (
+            <a
+              href="/admin"
+              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors border border-primary/30 px-3 py-1.5 rounded-full hover:border-primary/60 whitespace-nowrap flex-shrink-0"
+            >
+              🔓 התחבר
+            </a>
+          )}
+
+          <Button
+            asChild
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-5 xl:px-6 text-sm shadow-lg shadow-accent/25 whitespace-nowrap flex-shrink-0"
+          >
+            <a href={isHome() ? '#products' : '/#products'} className="flex items-center gap-1.5">
+              גלו את הערכות
+              <ChevronLeft className="w-4 h-4" />
+            </a>
+          </Button>
+        </div>
+
+        {/* שורת מובייל/טאבלט — נפרדת לגמרי מהדסקטופ (לא אלמנטים משותפים),
+            אותו אשכול-לוגואים קומפקטי כמו קודם (gap-[0.5cm] קבוע, לא
+            שווה-מרחק כי אין כאן "כפתורים" נוספים לפזר ביניהם) + המבורגר. */}
+        <div className="flex xl:hidden items-center justify-between h-16">
           <div className="flex items-center gap-[0.5cm] h-full">
-            {/* FG-Flying Giraph */}
             <a href="/" className="flex items-center h-full flex-shrink-0" aria-label="FG-Flying Giraph">
               <img
                 src="/images/לוגו מעודכן.png"
@@ -60,82 +135,19 @@ export default function Navbar() {
                 className="h-full w-auto object-contain"
               />
             </a>
-
             <a href="/" className="flex items-center gap-2 h-full">
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
-                <span className="text-primary-foreground font-black text-xs md:text-sm leading-none">3D</span>
+              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
+                <span className="text-primary-foreground font-black text-xs leading-none">3D</span>
               </div>
-              <span className="text-2xl md:text-3xl font-black text-primary tracking-tight">
+              <span className="text-2xl font-black text-primary tracking-tight">
                 ECO<span className="text-secondary">Shoham</span>
               </span>
             </a>
           </div>
 
-          {/* Desktop Nav — מרווח אופקי אחיד בין טאבים */}
-          <div className="hidden lg:flex items-center min-w-0 shrink mr-8 xl:mr-10">
-            <nav
-              className="flex items-center gap-x-3"
-              aria-label="ניווט ראשי"
-            >
-              {navLinks.map((link) => {
-                const isActive = link.activeWhen ? link.activeWhen(window.location.pathname) : false;
-                return (
-                  <a
-                    key={link.label}
-                    href={getHref(link)}
-                    {...(link.external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
-                    {...(link.activeWhen ? { 'aria-label': link.label, 'aria-current': isActive ? 'page' : undefined } : {})}
-                    className={`text-sm xl:text-base font-semibold transition-colors relative group whitespace-nowrap ${isActive ? 'text-primary' : 'text-foreground/80 hover:text-primary'}`}
-                  >
-                    {link.label}
-                    <span className={`absolute -bottom-1 right-0 h-0.5 bg-secondary transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
-                  </a>
-                );
-              })}
-            </nav>
-            <div className="flex items-center gap-3 ms-6 ps-6 border-s border-border/40 shrink-0">
-              {user ? (
-                <>
-                  <a
-                    href="/admin"
-                    className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors border border-border/50 px-3 py-1.5 rounded-full hover:border-primary/30 whitespace-nowrap"
-                  >
-                    🔐 מנהל
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => logout()}
-                    className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap"
-                  >
-                    התנתק
-                  </button>
-                </>
-              ) : (
-                <a
-                  href="/admin"
-                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors border border-primary/30 px-3 py-1.5 rounded-full hover:border-primary/60 whitespace-nowrap"
-                >
-                  🔓 התחבר
-                </a>
-              )}
-              <Button
-                asChild
-                className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-5 xl:px-6 text-sm shadow-lg shadow-accent/25 whitespace-nowrap"
-              >
-                <a href={isHome() ? '#products' : '/#products'} className="flex items-center gap-1.5">
-                  גלו את הערכות
-                  <ChevronLeft className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile/Tablet Toggle */}
           <button
             type="button"
-            className="lg:hidden p-3 -m-1 rounded-xl hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-3 -m-1 rounded-xl hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
@@ -150,7 +162,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-t border-border"
+            className="xl:hidden bg-background border-t border-border"
           >
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => {
