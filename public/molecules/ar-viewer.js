@@ -507,7 +507,11 @@ async function checkWebXrStatus(aa) {
       statusEl.textContent = 'WebXR נתמך במכשיר זה. "AR חי" למטה פותח session עצמאי עם כפתורי סיבוב/הגדלה אמיתיים בזמן אמת (ניסיוני — תלוי בתמיכת hit-test במכשיר).';
       statusEl.hidden = false;
     }
-    if (liveArBtn && aa && aa.glb) {
+    // הכפתור תלוי בתמיכת WebXR בלבד, לא בקובץ glb סטטי: "AR חי" קורא את
+    // sequence הגלובלי בזמן אמת (webxr-ar.js:startLiveAr) ולכן עובד גם
+    // לרצף מותאם-אישית שאין לו כלל קובץ AR קבוע (ראו buildCustomSequenceArEntry
+    // ב-app.js) — לא רק לחומצה בודדת/AR_SEQUENCES הקבועים.
+    if (liveArBtn && aa && typeof sequence !== 'undefined' && sequence && sequence.length > 0) {
       liveArBtn.hidden = false;
       liveArBtn.onclick = () => startLiveAr(aa.three || aa.en || aa.he || 'Molecule');
       logArDiag('AR חי: הכפתור פעיל ומחובר');

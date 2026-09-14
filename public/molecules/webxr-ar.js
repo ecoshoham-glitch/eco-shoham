@@ -220,7 +220,7 @@ function updateWebxrScaleReadout() {
 // את הגיאומטריה (רצף ארוך יותר), מחליפים buffers WebGL — בלי לצאת
 // מ-AR, בלי לאבד את המיקום/סיבוב/גודל הנוכחיים שהמשתמש כבר קבע. ====================
 function setWebxrAddButtonsDisabled(disabled) {
-  ['webxr-add-gly', 'webxr-add-ala', 'webxr-add-ser'].forEach((id) => {
+  ['webxr-add-gly', 'webxr-add-ala', 'webxr-add-ser', 'webxr-add-phe'].forEach((id) => {
     const btn = document.getElementById(id);
     if (btn) btn.disabled = disabled;
   });
@@ -325,7 +325,7 @@ function setupWebxrControlListeners() {
   if (zoomOut) zoomOut.addEventListener('click', zoomBy(false));
   if (exitBtn) exitBtn.addEventListener('click', () => { if (webxrArState) webxrArState.session.end(); });
 
-  [['webxr-add-gly', 'gly'], ['webxr-add-ala', 'ala'], ['webxr-add-ser', 'ser']].forEach(([elementId, residueId]) => {
+  [['webxr-add-gly', 'gly'], ['webxr-add-ala', 'ala'], ['webxr-add-ser', 'ser'], ['webxr-add-phe', 'phe']].forEach(([elementId, residueId]) => {
     const btn = document.getElementById(elementId);
     if (btn) btn.addEventListener('click', () => addResidueToLiveAr(residueId));
   });

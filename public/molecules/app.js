@@ -118,6 +118,21 @@ function finishProtein() {
 // דרך AR_SEQUENCES) — ורק אם אין קובץ AR לרצף הזה כלל, מציגים הודעה
 // גלויה (btn-finish-note) במקום להשאיר את הכפתור "פעיל חזותית" בלי שום
 // השפעה נראית-לעין.
+// רצף חופשי (לא חומצה בודדת, לא אחד מרצפי-הדוגמה הקבועים ב-AR_SEQUENCES):
+// אין לו קובץ glb/usdz קבוע, אז Quick Look/Scene Viewer יישארו מוסתרים
+// (enterQrArLanding כבר יודע לטפל נכון בהיעדרם — ראו ה-else שם). אבל
+// "AR חי" (webxr-ar.js:startLiveAr) קורא את sequence הגלובלי בזמן אמת,
+// לא קובץ סטטי — ולכן יעבוד למרות שאין כאן glb/usdz בכלל. he/en/three
+// כאן משמשים רק לכותרת התצוגה, לא לזיהוי/טעינת קובץ.
+function buildCustomSequenceArEntry() {
+  const labels = sequence.map((id) => (AMINO_ACIDS[id] && AMINO_ACIDS[id].three) || id);
+  return {
+    he: 'רצף מותאם אישית (' + sequence.length + ' חומצות)',
+    en: 'Custom sequence (' + sequence.length + ' residues)',
+    three: labels.join('–'),
+  };
+}
+
 function enterArForCurrentSequence() {
   const note = document.getElementById('btn-finish-note');
   if (note) note.hidden = true;
@@ -129,24 +144,11 @@ function enterArForCurrentSequence() {
 
   const key = sequence.join('-');
   const namedSeq = typeof AR_SEQUENCES !== 'undefined' ? AR_SEQUENCES[key] : null;
-  if (namedSeq) {
-    enterQrArLanding(namedSeq);
-    return;
-  }
-
-  // באג אמיתי שדווח ותוקן: אם מסך הנחיתה כבר היה פתוח (למשל אחרי סריקת
-  // חומצה בודדת נתמכת), והוספה נוספת (סריקת QR/handleFinishClick) הפכה
-  // את הרצף לבלתי-נתמך — הפונקציה הייתה רק מציגה את ההודעה הזו (שגרה
-  // בתוך app-shell, בלתי-נראית כשמסך הנחיתה פתוח) ומשאירה את מסך הנחיתה
-  // פתוח עם תוכן AR ישן/לא-רלוונטי. חייבים לצאת ממנו קודם, כדי שההודעה
-  // תהיה גלויה בפועל ולא יישאר AR מוצג לרצף שכבר לא תואם אותו.
-  const landing = document.getElementById('qr-landing');
-  if (landing && landing.hidden === false) exitQrArLanding(); // ar-viewer.js
-
-  if (note) {
-    note.textContent = 'רצף זה עדיין אינו זמין לצפייה ב-AR באייפון או באנדרואיד — אפשר להמשיך לצפות בתלת-ממד למעלה, ואת רצף ה-FASTA למטה.';
-    note.hidden = false;
-  }
+  // כל רצף שנבנה בפועל (סריקת QR/כפתורים) נכנס למסך ה-AR — גם בלי קובץ
+  // glb/usdz קבוע (namedSeq null): Quick Look/Scene Viewer הסטטיים לא
+  // יהיו זמינים לו (מגבלת פלטפורמה אמיתית), אבל "AR חי" (WebXR) כן,
+  // ראו buildCustomSequenceArEntry/checkWebXrStatus.
+  enterQrArLanding(namedSeq || buildCustomSequenceArEntry());
 }
 
 // מטופל ע"י כפתור "המשך לצפייה ב-AR" ב-index.html.
